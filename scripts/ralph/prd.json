@@ -1,0 +1,567 @@
+{
+  "project": "Underdog Jobs",
+  "branchName": "ralph/freshers-hiring-platform-mvp",
+  "description": "Tier-2 & Tier-3 Freshers-Only Hiring Platform - A marketplace for non-elite college students with AI onboarding, paid-only jobs, and direct chat",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Initialize Next.js project with Supabase and Tailwind",
+      "description": "As a developer, I need the project scaffolded with Next.js (App Router), Supabase client, and Tailwind CSS so all subsequent stories have a working foundation.",
+      "acceptanceCriteria": [
+        "Next.js 14+ project created with App Router (app/ directory)",
+        "Tailwind CSS installed and configured with a warm, approachable color palette (avoid corporate blue)",
+        "Supabase client library installed (@supabase/supabase-js, @supabase/ssr)",
+        "Environment variables set up for NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY (with .env.local.example)",
+        "Supabase client utility created at lib/supabase/client.ts (browser) and lib/supabase/server.ts (server)",
+        "Basic layout.tsx with global styles applied",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Create database schema — users, profiles, colleges, skills tables",
+      "description": "As a developer, I need the core database tables so auth, onboarding, and college gating can store data.",
+      "acceptanceCriteria": [
+        "SQL migration creates `profiles` table extending Supabase auth.users with columns: id (FK to auth.users), role ('candidate' | 'employer'), onboarding_status ('pending' | 'in_progress' | 'completed'), eligibility ('eligible' | 'ineligible'), full_name, created_at",
+        "SQL migration creates `candidate_profiles` table with columns: id, user_id (FK), work_vibe, role_intent, skill_identity, job_preference, strengths (text[]), dealbreakers (text[]), availability, college_id (FK), resume_url, github_url, linkedin_url, portfolio_url, projects (jsonb), created_at, updated_at",
+        "SQL migration creates `employer_profiles` table with columns: id, user_id (FK), fresher_type, hiring_intent, company_context, role_category, top_skills (text[]), hiring_philosophy, candidate_type_pref, work_style, city, compensation_type, created_at, updated_at",
+        "SQL migration creates `colleges` table with columns: id, name, tier (1 | 2 | 3), state, type ('IIT' | 'NIT' | 'IIIT' | 'BITS' | 'IISc' | 'Private' | 'State' | 'Deemed' | 'Other'), created_at",
+        "SQL migration creates `skills` table with columns: id, name, category",
+        "Index on colleges.name for fast partial text search",
+        "RLS policies: users can read/update their own profile rows only",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Create database schema — companies, jobs, applications, messages tables",
+      "description": "As a developer, I need the job posting, application, and messaging tables for the employer and hiring pipeline features.",
+      "acceptanceCriteria": [
+        "SQL migration creates `companies` table: id, employer_id (FK to profiles), name, logo_url, industry, vibe_description, created_at",
+        "SQL migration creates `jobs` table: id, company_id (FK), employer_id (FK), title, description, role_type ('internship' | 'full_time' | 'freelance'), compensation (integer, must be > 0), location, work_style ('remote' | 'in_office' | 'hybrid'), skill_tags (text[]), deadline (date), status ('active' | 'filled' | 'expired'), created_at, updated_at",
+        "SQL migration creates `applications` table: id, candidate_id (FK), job_id (FK), status ('applied' | 'shortlisted' | 'interview' | 'offer' | 'hired' | 'rejected'), created_at, updated_at. Unique constraint on (candidate_id, job_id)",
+        "SQL migration creates `messages` table: id, sender_id (FK), receiver_id (FK), application_id (FK), content (text), is_read (boolean default false), created_at",
+        "CHECK constraint on jobs.compensation > 0",
+        "RLS policies: employers see their own jobs/applications; candidates see their own applications; message access restricted to sender/receiver",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Seed colleges master list and skills list",
+      "description": "As a developer, I need the colleges table populated with Tier-1/2/3 institutions and the skills table with predefined options.",
+      "acceptanceCriteria": [
+        "Seed script (supabase/seed.sql or scripts/seed-colleges.ts) populates all 23 IITs as Tier-1",
+        "All 31 NITs seeded as Tier-1",
+        "All 26 IIITs seeded as Tier-1",
+        "BITS Pilani (all campuses), IISc Bangalore seeded as Tier-1",
+        "At least 500 Tier-2 and Tier-3 colleges seeded with correct state and type",
+        "Skills table seeded with: Python, Java, Web Development, UI/UX Design, Content Writing, Influencer Marketing, Sales/Outreach, Data Analysis, Operations, Product Thinking, Communication",
+        "Seed script is idempotent (can be run multiple times without duplicates)",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Build landing page with role selection",
+      "description": "As a visitor, I want to see a landing page that explains the platform so I can decide to sign up as a candidate or employer.",
+      "acceptanceCriteria": [
+        "Landing page at route / with hero section and platform tagline about fair hiring for Tier-2/3 freshers",
+        "Two prominent CTA buttons: 'Get Started as Student' (links to /signup?role=candidate) and 'Hire Freshers' (links to /signup?role=employer)",
+        "Brief section with 3 value props: Tier-2/3 only, no unpaid roles, AI vibe matching",
+        "Mobile responsive layout",
+        "Warm, approachable design (not corporate blue)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Build signup form with email and password",
+      "description": "As a user (candidate or employer), I want to sign up with my name, email, and password.",
+      "acceptanceCriteria": [
+        "Signup page at /signup with fields: Full Name, Email, Password",
+        "Role is read from URL query param (?role=candidate or ?role=employer) and stored",
+        "Email validated for format; password requires minimum 8 characters with inline validation",
+        "On submit, calls Supabase Auth signUp with email confirmation enabled",
+        "On success, creates a row in `profiles` table with role and onboarding_status='pending'",
+        "Redirects to /verify-otp page on success",
+        "Shows inline error for duplicate email or other auth errors",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Build OTP verification screen",
+      "description": "As a user, I want to verify my email with a 6-digit OTP so my account is trusted.",
+      "acceptanceCriteria": [
+        "OTP page at /verify-otp with 6 separate digit input fields that auto-focus to the next field",
+        "On submit, calls Supabase Auth verifyOtp",
+        "60-second cooldown timer before 'Resend OTP' button becomes active",
+        "Invalid/expired OTP shows red inline error text",
+        "On successful verification, redirects candidate to /onboarding/candidate and employer to /onboarding/employer",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Build reusable chat UI component for AI onboarding",
+      "description": "As a developer, I need a reusable full-screen chat component that renders AI messages, typing animation, and tap-able pill/bubble options.",
+      "acceptanceCriteria": [
+        "ChatUI component at components/chat/ChatUI.tsx",
+        "Renders message bubbles: AI messages on the left, user selections on the right",
+        "AI messages appear with a typing animation (dots, then text reveal)",
+        "Supports rendering tap-able pill/bubble options (single-select and multi-select modes)",
+        "When user taps a pill, it appears as their response bubble and triggers an onSelect callback",
+        "Multi-select mode shows a 'Continue' button after selecting the required number of options",
+        "Smooth auto-scroll to latest message",
+        "Full-screen layout, mobile-first, warm gradient background",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Build LLM integration for onboarding chat",
+      "description": "As a developer, I need a server-side API route that sends the questionnaire context to an LLM and returns conversational messages with structured option data.",
+      "acceptanceCriteria": [
+        "API route at app/api/chat/route.ts using Next.js Route Handlers",
+        "Accepts POST with: role (candidate/employer), currentSection (number), previousAnswers (object)",
+        "Sends a system prompt to the LLM with the full question bank for the given role and section",
+        "System prompt instructs the LLM to respond in warm, casual, dating-app style tone",
+        "LLM response is parsed to extract: message text, options array (label + value), and select mode (single/multi)",
+        "Returns JSON: { message: string, options: [{label, value}], selectMode: 'single' | 'multi', maxSelections?: number }",
+        "Handles Claude API or OpenAI API (configurable via env var)",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Build candidate onboarding flow — Sections 0-3 (Vibe, Intent, Skills, Preferences)",
+      "description": "As a candidate, I want to answer the first 4 sections of the AI vibe check so the platform understands my personality and preferences.",
+      "acceptanceCriteria": [
+        "Candidate onboarding page at /onboarding/candidate using the ChatUI component",
+        "Section 0 (Warm-up): AI asks about work vibe, presents 4 pill options (structured corporate / startup chaos / creative+flexible / I'm open)",
+        "Section 1 (Role Intent): AI asks what they're here for, 4 options (internship / full-time / freelance / exploring)",
+        "Section 2 (Skill Identity): AI asks 7-days-laptop question, 6 options (code / design / sell / analyze / manage / figuring it out)",
+        "Section 3 (Job Preferences): AI asks work style, 4 options (remote / in-office / hybrid / doesn't matter)",
+        "Each answer is stored in component state and persisted to candidate_profiles via server action after each section",
+        "Progress is saved — refreshing the page resumes from the last completed section",
+        "Calls the /api/chat endpoint for each section's AI message",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Build candidate onboarding flow — Sections 4-6 (Strengths, Dealbreakers, Availability)",
+      "description": "As a candidate, I want to answer sections about my strengths, dealbreakers, and availability.",
+      "acceptanceCriteria": [
+        "Continues the /onboarding/candidate page from Section 4",
+        "Section 4 (Strengths): AI asks to pick exactly 2 strengths — multi-select pills from 6 options (fast learner / strong comms / technical skills / leadership / creative thinking / hardworking). Continue button appears after 2 selected.",
+        "Section 5 (Dealbreakers): AI asks what NOT to show — multi-select pills from 5 options (unpaid internships / sales roles / too corporate / too competitive / unrelated roles)",
+        "Section 6 (Availability): AI asks when they can start — 4 single-select options (immediately / 1 month / 3 months / browsing)",
+        "All answers persisted to candidate_profiles after each section",
+        "After Section 6, flow transitions to Section 7 (college gate)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Build candidate onboarding — Section 7 (Tier-1 College Gate)",
+      "description": "As the platform, I need to verify the candidate's college and block Tier-1 students.",
+      "acceptanceCriteria": [
+        "After Section 6, AI asks 'which college are you from?'",
+        "Searchable dropdown appears in the chat, querying the colleges table with debounced partial text search (server-side query)",
+        "Dropdown shows college name and tier badge",
+        "If user selects a Tier-1 college: chat stops, polite fairness screen appears with message: 'Hey — this platform is only for Tier-2/Tier-3 freshers, so we can keep opportunities fair. You're already a rockstar, and we know you'll find something great elsewhere!'",
+        "Account flagged as ineligible in profiles table (eligibility='ineligible')",
+        "Ineligible users are redirected to a /blocked page on any subsequent login attempt",
+        "If Tier-2 or Tier-3 selected: college_id saved to candidate_profiles, flow proceeds to Section 8",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Build candidate onboarding — Section 8 (Resume upload & portfolio)",
+      "description": "As a candidate, I want to upload my resume and optionally add portfolio links after passing the college gate.",
+      "acceptanceCriteria": [
+        "After passing college gate, upload screen appears within the chat flow",
+        "Resume upload: mandatory, PDF only, max 5MB, stored in Supabase Storage bucket 'resumes/'",
+        "Optional text inputs: GitHub URL, LinkedIn URL, Portfolio URL",
+        "Optional: up to 3 project entries (title + short description) stored as JSONB",
+        "All data saved to candidate_profiles (resume_url, github_url, linkedin_url, portfolio_url, projects)",
+        "On completion, AI says 'I'm ready! Let's find your match' and a 'Go to Jobs' button redirects to /jobs",
+        "Profile onboarding_status updated to 'completed'",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Add incomplete onboarding guard middleware",
+      "description": "As the platform, I need to redirect users with incomplete onboarding back to the vibe check on every login.",
+      "acceptanceCriteria": [
+        "Next.js middleware checks authenticated users' onboarding_status from profiles table",
+        "If onboarding_status is 'pending' or 'in_progress': redirect to /onboarding/candidate or /onboarding/employer based on role",
+        "If eligibility is 'ineligible': redirect to /blocked",
+        "Protected routes: /jobs, /dashboard, /chat — all require completed onboarding",
+        "Public routes: /, /signup, /verify-otp, /onboarding/*, /blocked — no redirect",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Build employer onboarding flow — Sections 0-4 (Vibe, Intent, Context, Role, Skills)",
+      "description": "As an employer, I want to answer the first 5 sections of the hiring persona chat.",
+      "acceptanceCriteria": [
+        "Employer onboarding page at /onboarding/employer using the ChatUI component",
+        "Section 0 (Warm-up): 5 options (hungry learner / job-ready / creative builder / dependable executor / just someone solid)",
+        "Section 1 (Hiring Intent): 5 options (internship / full-time / freelance / bulk / exploring)",
+        "Section 2 (Company Context): 5 options (early-stage startup / growing business / corporate / agency / non-profit)",
+        "Section 3 (Role Category): 8 options (tech / marketing / sales / design / data / operations / product / other)",
+        "Section 4 (Skills): Multi-select top 3 from predefined skills list + 'Other' free text input",
+        "All answers persisted to employer_profiles after each section",
+        "Calls /api/chat with role='employer' for each section",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Build employer onboarding flow — Sections 5-8 (Philosophy, Type, Work Style, Compensation)",
+      "description": "As an employer, I want to complete the remaining onboarding sections about hiring philosophy and compensation.",
+      "acceptanceCriteria": [
+        "Section 5 (Philosophy): 5 options (skills>college / attitude>exp / communication / speed / loyalty)",
+        "Section 6 (Candidate Type): 5 options (needs mentorship / independent / fast learner / structured / creative)",
+        "Section 7 (Work Style): work mode pills (remote / in-office / hybrid / flexible) + city searchable dropdown",
+        "Section 8 (Compensation): 4 options (stipend / CTC / freelance payout / performance+base). Shows 'Unpaid roles are not allowed on this platform' info message.",
+        "All answers persisted to employer_profiles",
+        "On completion, onboarding_status updated to 'completed', redirect to /onboarding/employer/company-profile",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Build employer company profile setup page",
+      "description": "As an employer, I want to set up my company profile with name, logo, industry, and vibe description.",
+      "acceptanceCriteria": [
+        "Company profile page at /onboarding/employer/company-profile",
+        "Form fields: Company Name (text), Logo (image upload), Industry (dropdown), Company Vibe description (textarea)",
+        "Logo upload stored in Supabase Storage bucket 'logos/'",
+        "Data saved to companies table linked to the employer's user_id",
+        "On submit, redirects to /dashboard/employer",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Build job posting creation form",
+      "description": "As an employer, I want to create a paid job/internship listing.",
+      "acceptanceCriteria": [
+        "Job posting page at /dashboard/employer/post-job",
+        "Form fields: Title, Description (rich text or textarea), Role Type (internship/full_time/freelance dropdown), Compensation in INR (number input), Location (text), Work Style (remote/in_office/hybrid), Skill Tags (multi-select from skills table), Application Deadline (date picker)",
+        "If compensation is 0 or empty: Publish button is disabled with tooltip 'Why we don't allow unpaid roles'",
+        "Must select at least 1 skill tag — validation error if none selected",
+        "Server action checks for duplicate job title by same employer within 24 hours — shows error if duplicate found",
+        "On success, job saved to jobs table with status 'active' and redirects to /dashboard/employer",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Build job discovery feed for candidates",
+      "description": "As a candidate, I want to browse available jobs in a card-based feed.",
+      "acceptanceCriteria": [
+        "Job feed page at /jobs showing job cards in a responsive grid",
+        "Each card shows: Role Title, Company Name, Company Logo, Compensation (₹), Role Type badge, Location, Work Style badge",
+        "Jobs listed in reverse chronological order (newest first)",
+        "Only shows jobs with status 'active' and deadline >= today",
+        "Paginated — 20 jobs per page with 'Load More' or pagination controls",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-020",
+      "title": "Add filters to job feed",
+      "description": "As a candidate, I want to filter jobs by role type, work style, and skills.",
+      "acceptanceCriteria": [
+        "Filter bar at top of /jobs page with dropdowns: Role Type (All/Internship/Full-time/Freelance), Work Style (All/Remote/In-office/Hybrid), Skill Tags (multi-select)",
+        "Filters update the job list without full page reload (client-side filtering or URL params with server query)",
+        "Active filters are visually indicated and clearable",
+        "Empty state message when no jobs match filters",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-021",
+      "title": "Build job detail page",
+      "description": "As a candidate, I want to view the full details of a job posting.",
+      "acceptanceCriteria": [
+        "Job detail page at /jobs/[id]",
+        "Shows: Title, Company Name + Logo, Full Description, Role Type, Compensation, Location, Work Style, Skill Tags, Deadline",
+        "Company vibe description shown in a sidebar or section",
+        "Quick Apply button (same behavior as on card — see US-022)",
+        "Back link to /jobs feed",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-022",
+      "title": "Build Quick Apply functionality",
+      "description": "As a candidate, I want to apply to a job with one tap.",
+      "acceptanceCriteria": [
+        "Quick Apply button on job cards and job detail page",
+        "If candidate has resume_url in candidate_profiles: clicking creates an application record with status 'applied' immediately",
+        "If no resume on file: clicking opens a PDF upload modal — after upload, application is submitted",
+        "Server action creates row in applications table with candidate_id, job_id, status='applied'",
+        "Duplicate prevention: if application already exists for this candidate+job, button shows 'Applied' (disabled state)",
+        "Success toast: 'Application submitted!'",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-023",
+      "title": "Build candidate application tracker dashboard",
+      "description": "As a candidate, I want to see the status of all my applications.",
+      "acceptanceCriteria": [
+        "Candidate dashboard at /dashboard/candidate",
+        "Lists all applications with: Job Title, Company Name, Application Date, Current Status (applied/shortlisted/interview/offer/hired/rejected)",
+        "Status shown as colored badge for each pipeline stage",
+        "Sorted by most recent application first",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-024",
+      "title": "Build employer application inbox",
+      "description": "As an employer, I want to see all candidates who applied to my jobs.",
+      "acceptanceCriteria": [
+        "Employer dashboard at /dashboard/employer with application inbox",
+        "Applications grouped by job posting (accordion or tabs)",
+        "Each applicant row shows: Candidate Name, College Name, Key Skills (from onboarding strengths), Application Date, Current Status",
+        "One-click 'View Resume' button opens the candidate's PDF in a new tab",
+        "Sorted by most recent application first within each job group",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-025",
+      "title": "Build hiring pipeline status controls",
+      "description": "As an employer, I want to move candidates through pipeline stages.",
+      "acceptanceCriteria": [
+        "Each applicant row in the inbox has a status dropdown: Applied / Shortlisted / Interview / Offer / Hired",
+        "Changing the dropdown updates the application status via server action immediately",
+        "Status change is reflected on the candidate's dashboard in real-time (or on next page load)",
+        "Visual confirmation of status change (toast or inline animation)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-026",
+      "title": "Build direct chat — message data layer and API",
+      "description": "As a developer, I need server actions for sending/receiving messages and Supabase Realtime subscriptions.",
+      "acceptanceCriteria": [
+        "Server action: sendMessage(senderId, receiverId, applicationId, content) — inserts into messages table",
+        "Server action: getMessages(applicationId) — returns messages for an application, cursor-based pagination (latest 50 first)",
+        "Server action: markAsRead(messageId) — sets is_read=true",
+        "Supabase Realtime subscription config for the messages table (INSERT events filtered by receiver_id)",
+        "Only the employer can send the first message (enforced in sendMessage — checks if any prior message exists from employer for this application)",
+        "Typecheck passes"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-027",
+      "title": "Build direct chat UI",
+      "description": "As an employer or candidate, I want a chat interface to communicate in real-time.",
+      "acceptanceCriteria": [
+        "Chat page at /chat/[applicationId]",
+        "Message list with sender-aligned bubbles (own messages right, other's left)",
+        "Text input with send button at the bottom",
+        "Real-time message updates via Supabase Realtime subscription (new messages appear without refresh)",
+        "If candidate tries to send first message and no employer message exists, show disabled input with hint 'Waiting for recruiter to start the conversation'",
+        "Messages marked as read when chat is opened",
+        "Auto-scroll to latest message on load and on new message",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-028",
+      "title": "Add Open Chat button to employer inbox",
+      "description": "As an employer, I want to open a chat with a candidate directly from the application inbox.",
+      "acceptanceCriteria": [
+        "Each applicant row in the employer inbox has an 'Open Chat' button",
+        "Clicking navigates to /chat/[applicationId]",
+        "If no messages exist yet, the chat opens and the employer can send the first message",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-029",
+      "title": "Add in-app notification badge for unread messages",
+      "description": "As a user, I want to see a badge when I have unread messages.",
+      "acceptanceCriteria": [
+        "Navigation bar shows a chat/messages icon with a red badge count of unread messages",
+        "Badge count updates in real-time via Supabase Realtime subscription on messages table (filtered by receiver_id, is_read=false)",
+        "Clicking the icon navigates to a chat list page (/chat) showing all conversations",
+        "Chat list shows: other party's name, last message preview, unread count per conversation",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-030",
+      "title": "Build hire completion flow with confetti",
+      "description": "As an employer, I want to mark a candidate as hired and celebrate the moment.",
+      "acceptanceCriteria": [
+        "When employer changes applicant status to 'Hired' (from Offer stage): confirmation dialog appears 'Mark [Name] as Hired?'",
+        "On confirm: application status set to 'hired', job status changed to 'filled'",
+        "All other applications for the same job get status 'rejected' automatically",
+        "Candidate sees a confirmation prompt on their dashboard to accept the hire",
+        "Confetti animation plays on both employer and candidate screens (use canvas-confetti library)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 30,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-031",
+      "title": "Add vibe feedback form after hire",
+      "description": "As an employer, I want to optionally leave feedback after hiring a candidate.",
+      "acceptanceCriteria": [
+        "After confetti animation, a modal appears with optional 'Vibe Feedback' form",
+        "Form has: 1-5 star rating and a short text field (max 280 chars)",
+        "Skip button to dismiss without feedback",
+        "Feedback saved to a `hire_feedback` table (application_id FK, rating, comment, created_at)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 31,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-032",
+      "title": "Build shared navigation bar with role-based links",
+      "description": "As a user, I want a consistent navigation bar that shows the right links based on my role.",
+      "acceptanceCriteria": [
+        "Shared Navbar component in layout used across all authenticated pages",
+        "Candidate nav: Jobs Feed, My Applications, Chat, Profile",
+        "Employer nav: Dashboard (inbox), Post Job, Chat, Company Profile",
+        "Logo/brand name links to / (landing) if logged out, or /jobs (candidate) or /dashboard/employer (employer) if logged in",
+        "Logout button that calls Supabase auth signOut and redirects to /",
+        "Mobile: hamburger menu or bottom tab bar",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 32,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
