@@ -124,8 +124,8 @@ export default function Navbar() {
   ];
 
   const links = role === "employer" ? employerLinks : candidateLinks;
-  const isGuest = loaded && !role;
-  const isLoggedIn = loaded && !!role;
+  const isGuest = loaded && !userId;
+  const isLoggedIn = loaded && !!userId;
 
   const linkStyle: React.CSSProperties = {
     fontFamily: "var(--font-sans), sans-serif",

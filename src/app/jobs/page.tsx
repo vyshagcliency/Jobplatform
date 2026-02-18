@@ -129,8 +129,6 @@ export default function JobsPage() {
     let query = supabase
       .from("jobs")
       .select("id, title, role_type, compensation, location, work_style, skill_tags, created_at, companies(name, logo_url)")
-      .eq("status", "active")
-      .gte("deadline", new Date().toISOString().split("T")[0])
       .order("created_at", { ascending: false })
       .range(from, from + 19);
 
@@ -321,18 +319,21 @@ export default function JobsPage() {
               const rc = roleColors[job.role_type] ?? { bg: "#F3F4F6", text: "#4B5563" };
               const sc = styleColors[job.work_style] ?? { bg: "#F3F4F6", text: "#4B5563" };
               const isMock = job.id.startsWith("mock-");
+              const Wrapper = isMock ? "div" : Link;
+              const wrapperProps = isMock ? {} : { href: `/jobs/${job.id}` };
               return (
-                <Link
+                <Wrapper
                   key={job.id}
-                  href={isMock ? "/signup?role=candidate" : `/jobs/${job.id}`}
+                  {...wrapperProps as Record<string, string>}
                   style={{
                     display: "flex", flexDirection: "column",
                     backgroundColor: "#ffffff", borderRadius: "14px",
                     border: "1px solid rgba(0,0,0,0.07)", padding: "1.25rem",
                     textDecoration: "none", transition: "box-shadow 0.15s, transform 0.15s",
                     boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                    cursor: isMock ? "default" : "pointer",
                   }}
-                  className="job-card"
+                  className={isMock ? "" : "job-card"}
                 >
                   {/* Company row */}
                   <div style={{ display: "flex", alignItems: "center", gap: "0.625rem", marginBottom: "0.875rem" }}>
@@ -427,7 +428,7 @@ export default function JobsPage() {
                       {job.location}
                     </p>
                   </div>
-                </Link>
+                </Wrapper>
               );
             })}
           </div>
