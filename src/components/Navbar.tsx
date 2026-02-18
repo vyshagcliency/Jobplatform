@@ -43,7 +43,7 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const supabase = createClient();
-  const isOnboarding = pathname?.startsWith("/onboarding");
+  const isLight = pathname === "/" || pathname?.startsWith("/onboarding");
 
   const [role, setRole] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -131,7 +131,7 @@ export default function Navbar() {
     fontFamily: "var(--font-dm-sans), sans-serif",
     fontSize: "0.875rem",
     fontWeight: 500,
-    color: isOnboarding ? "#78716C" : "#9CA3AF",
+    color: isLight ? "#78716C" : "#9CA3AF",
     textDecoration: "none",
   };
 
@@ -139,7 +139,7 @@ export default function Navbar() {
     <nav
       className="sticky top-0 z-50"
       style={
-        isOnboarding
+        isLight
           ? {
               backgroundColor: "rgba(250, 247, 242, 0.95)",
               backdropFilter: "blur(14px)",
@@ -186,7 +186,7 @@ export default function Navbar() {
               fontFamily: "var(--font-syne), sans-serif",
               fontWeight: 700,
               fontSize: "1.0625rem",
-              color: isOnboarding ? "#1C1917" : "#EDEAE4",
+              color: isLight ? "#1C1917" : "#EDEAE4",
               letterSpacing: "-0.01em",
             }}
           >
@@ -265,7 +265,7 @@ export default function Navbar() {
                     background: "none",
                     border: "none",
                     cursor: "pointer",
-                    color: isOnboarding ? "#A8A29E" : "#6B7280",
+                    color: isLight ? "#A8A29E" : "#6B7280",
                   }}
                 >
                   Logout
@@ -304,8 +304,8 @@ export default function Navbar() {
         <div
           className="md:hidden"
           style={{
-            borderTop: isOnboarding ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.07)",
-            backgroundColor: isOnboarding ? "#faf7f2" : "#0C0E13",
+            borderTop: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.07)",
+            backgroundColor: isLight ? "#faf7f2" : "#0C0E13",
             padding: "0.25rem 1.5rem 1rem",
           }}
         >
