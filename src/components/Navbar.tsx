@@ -43,7 +43,7 @@ export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
   const supabase = createClient();
-  const isLight = pathname === "/" || pathname?.startsWith("/onboarding");
+  const isLight = true; // app-wide light theme
 
   const [role, setRole] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);

@@ -31,7 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${fraunces.variable} ${dmSans.variable} min-h-screen bg-[#0C0E13] text-[#EDEAE4] antialiased`}
+        className={`${fraunces.variable} ${dmSans.variable} min-h-screen bg-[#faf7f2] text-[#1C1917] antialiased`}
       >
         <Navbar />
         {children}
