@@ -92,7 +92,7 @@ export default function ChatListPage() {
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#faf7f2", padding: "1.75rem 1.25rem" }}>
-      <div style={{ maxWidth: 600, margin: "0 auto" }}>
+      <div style={{ maxWidth: 840, margin: "0 auto" }}>
 
         {/* Header */}
         <div style={{ marginBottom: "1.5rem" }}>

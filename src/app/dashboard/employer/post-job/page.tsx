@@ -101,7 +101,7 @@ export default function PostJobPage() {
 
   return (
     <div className="min-h-screen bg-warm-50 px-4 py-8">
-      <div className="mx-auto max-w-2xl rounded-2xl bg-white p-8 shadow-sm">
+      <div className="mx-auto max-w-3xl rounded-2xl bg-white p-8 shadow-sm">
         <h1 className="mb-6 text-2xl font-bold text-gray-900">Post a Job</h1>
 
         <form onSubmit={handleSubmit} className="space-y-5">

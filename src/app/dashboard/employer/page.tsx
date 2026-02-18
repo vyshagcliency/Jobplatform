@@ -173,7 +173,7 @@ export default function EmployerDashboard() {
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#faf7f2", padding: "1.75rem 1.25rem" }}>
-      <div style={{ maxWidth: 800, margin: "0 auto" }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto" }}>
 
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "1.5rem", flexWrap: "wrap", gap: "0.75rem" }}>
