@@ -27,10 +27,25 @@ interface ChatUIProps {
 
 function TypingIndicator() {
   return (
-    <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm bg-white px-4 py-3 shadow-sm border border-gray-100">
-      <span className="h-2 w-2 animate-bounce rounded-full bg-gray-300 [animation-delay:0ms]" />
-      <span className="h-2 w-2 animate-bounce rounded-full bg-gray-300 [animation-delay:150ms]" />
-      <span className="h-2 w-2 animate-bounce rounded-full bg-gray-300 [animation-delay:300ms]" />
+    <div
+      className="flex items-center gap-1 rounded-2xl rounded-bl-sm px-4 py-3"
+      style={{
+        backgroundColor: "#13161D",
+        border: "1px solid rgba(255,255,255,0.07)",
+      }}
+    >
+      <span
+        className="h-2 w-2 animate-bounce rounded-full [animation-delay:0ms]"
+        style={{ backgroundColor: "#6B7280" }}
+      />
+      <span
+        className="h-2 w-2 animate-bounce rounded-full [animation-delay:150ms]"
+        style={{ backgroundColor: "#6B7280" }}
+      />
+      <span
+        className="h-2 w-2 animate-bounce rounded-full [animation-delay:300ms]"
+        style={{ backgroundColor: "#6B7280" }}
+      />
     </div>
   );
 }
@@ -55,9 +70,23 @@ function AiMessage({ content }: { content: string }) {
   }, [content]);
 
   return (
-    <div className="max-w-[75%] rounded-2xl rounded-bl-sm bg-white px-4 py-3 text-gray-800 shadow-sm border border-gray-100">
+    <div
+      className="max-w-[75%] rounded-2xl rounded-bl-sm px-4 py-3"
+      style={{
+        backgroundColor: "#13161D",
+        border: "1px solid rgba(255,255,255,0.07)",
+        color: "#EDEAE4",
+        fontSize: "0.9375rem",
+        lineHeight: "1.6",
+        fontFamily: "var(--font-dm-sans), sans-serif",
+      }}
+    >
       {displayed}
-      {!done && <span className="animate-pulse text-gray-400">|</span>}
+      {!done && (
+        <span style={{ color: "#6B7280" }} className="animate-pulse">
+          |
+        </span>
+      )}
     </div>
   );
 }
@@ -95,10 +124,19 @@ function PillOptions({
   return (
     <div className="flex flex-col gap-3">
       {selectMode === "multi" && maxSelections && (
-        <p className="text-xs text-gray-400 font-medium tracking-wide">
-          Pick up to {maxSelections} · {selected.length} selected
+        <p
+          style={{
+            fontFamily: "var(--font-dm-sans), sans-serif",
+            fontSize: "0.75rem",
+            color: "#6B7280",
+            fontWeight: 500,
+            letterSpacing: "0.03em",
+          }}
+        >
+          Pick up to {maxSelections} &middot; {selected.length} selected
         </p>
       )}
+
       <div className="flex flex-wrap gap-2">
         {options.map((opt) => {
           const isSelected = selected.includes(opt.value);
@@ -106,22 +144,46 @@ function PillOptions({
             <button
               key={opt.value}
               onClick={() => handleTap(opt.value)}
-              className={`rounded-full border-2 px-4 py-2 text-sm font-medium transition-all duration-150 ${
-                isSelected
-                  ? "border-primary-600 bg-primary-600 text-white shadow-md"
-                  : "border-gray-200 bg-white text-gray-700 hover:border-primary-400 hover:bg-orange-50"
-              }`}
+              style={{
+                fontFamily: "var(--font-dm-sans), sans-serif",
+                fontSize: "0.875rem",
+                fontWeight: 500,
+                borderRadius: "9999px",
+                padding: "0.5rem 1rem",
+                transition: "all 0.15s ease",
+                border: isSelected
+                  ? "1.5px solid #FF5C2C"
+                  : "1.5px solid rgba(255,255,255,0.12)",
+                backgroundColor: isSelected
+                  ? "#FF5C2C"
+                  : "rgba(255,255,255,0.04)",
+                color: isSelected ? "#fff" : "#EDEAE4",
+                cursor: "pointer",
+              }}
             >
               {opt.label}
             </button>
           );
         })}
       </div>
+
       {selectMode === "multi" && (
         <button
           onClick={() => onSelect(selected)}
           disabled={!canContinue}
-          className="w-full rounded-xl bg-primary-600 py-3 text-sm font-semibold text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-30"
+          style={{
+            fontFamily: "var(--font-dm-sans), sans-serif",
+            fontSize: "0.875rem",
+            fontWeight: 600,
+            width: "100%",
+            padding: "0.75rem",
+            borderRadius: "10px",
+            border: "none",
+            cursor: canContinue ? "pointer" : "not-allowed",
+            backgroundColor: canContinue ? "#FF5C2C" : "rgba(255,255,255,0.08)",
+            color: canContinue ? "#fff" : "#6B7280",
+            transition: "all 0.15s ease",
+          }}
         >
           Continue
         </button>
@@ -146,7 +208,10 @@ export default function ChatUI({
   }, [messages, isTyping]);
 
   return (
-    <div className="flex h-screen flex-col bg-[#faf7f2]">
+    <div
+      className="flex h-screen flex-col"
+      style={{ backgroundColor: "#0C0E13" }}
+    >
       {/* Scrollable chat messages */}
       <div className="flex-1 overflow-y-auto px-4 pt-6 pb-4">
         <div className="mx-auto max-w-2xl space-y-4">
@@ -158,7 +223,16 @@ export default function ChatUI({
               {msg.role === "ai" ? (
                 <AiMessage content={msg.content} />
               ) : (
-                <div className="max-w-[75%] rounded-2xl rounded-br-sm bg-primary-600 px-4 py-3 text-white shadow-sm">
+                <div
+                  className="max-w-[75%] rounded-2xl rounded-br-sm px-4 py-3"
+                  style={{
+                    backgroundColor: "#FF5C2C",
+                    color: "#fff",
+                    fontSize: "0.9375rem",
+                    lineHeight: "1.6",
+                    fontFamily: "var(--font-dm-sans), sans-serif",
+                  }}
+                >
                   {msg.content}
                 </div>
               )}
@@ -175,9 +249,15 @@ export default function ChatUI({
         </div>
       </div>
 
-      {/* Sticky options panel — only shown when there are options */}
+      {/* Sticky bottom options panel */}
       {hasOptions && (
-        <div className="border-t border-gray-200 bg-white px-4 py-4 shadow-[0_-4px_24px_rgba(0,0,0,0.06)]">
+        <div
+          className="px-4 py-4"
+          style={{
+            backgroundColor: "#13161D",
+            borderTop: "1px solid rgba(255,255,255,0.07)",
+          }}
+        >
           <div className="mx-auto max-w-2xl">
             <PillOptions
               options={options}
