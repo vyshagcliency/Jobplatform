@@ -58,7 +58,7 @@ function SignupForm() {
         return;
       }
 
-      router.push("/verify-otp");
+      router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
     } catch {
       setError("Something went wrong. Please try again.");
       setLoading(false);

@@ -1,11 +1,19 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
-export default function VerifyOtpPage() {
+const F = {
+  display: "var(--font-syne), sans-serif",
+  body: "var(--font-dm-sans), sans-serif",
+} as const;
+
+function VerifyOtpForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
   const [otp, setOtp] = useState<string[]>(Array(6).fill(""));
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -14,13 +22,20 @@ export default function VerifyOtpPage() {
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
+    // 1. Prefer email passed explicitly from signup as URL param
+    const paramEmail = searchParams.get("email");
+    if (paramEmail) {
+      setEmail(paramEmail);
+      return;
+    }
+    // 2. Fallback: read from an existing session (e.g. user came here directly)
     const supabase = createClient();
     supabase.auth.getSession().then(({ data }) => {
       if (data.session?.user?.email) {
         setEmail(data.session.user.email);
       }
     });
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     if (cooldown <= 0) return;
@@ -77,11 +92,7 @@ export default function VerifyOtpPage() {
       const { data: { user } } = await supabase.auth.getUser();
       const role = user?.user_metadata?.role;
 
-      if (role === "employer") {
-        router.push("/onboarding/employer");
-      } else {
-        router.push("/onboarding/candidate");
-      }
+      router.push(role === "employer" ? "/onboarding/employer" : "/onboarding/candidate");
     } catch {
       setError("Verification failed. Please try again.");
       setLoading(false);
@@ -102,15 +113,72 @@ export default function VerifyOtpPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary-50 via-warm-50 to-accent-50 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl">
-        <h1 className="mb-2 text-2xl font-bold text-gray-900">Verify Your Email</h1>
-        <p className="mb-8 text-sm text-gray-500">
+    <main
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#ffffff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "2rem 1.5rem",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "400px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          textAlign: "center",
+        }}
+      >
+        {/* Logo */}
+        <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", textDecoration: "none", marginBottom: "2.5rem" }}>
+          <svg width="28" height="28" viewBox="0 0 30 30" fill="none">
+            <rect width="30" height="30" rx="7" fill="#BBFF3B" />
+            <path d="M15 21 L15 9" stroke="#0C0E13" strokeWidth="2.5" strokeLinecap="round" />
+            <path d="M10.5 14 L15 9 L19.5 14" stroke="#0C0E13" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M11.5 19.5 L18.5 19.5" stroke="#0C0E13" strokeWidth="2" strokeLinecap="round" />
+          </svg>
+          <span style={{ fontFamily: F.display, fontWeight: 700, fontSize: "1rem", color: "#1C1C1A" }}>
+            Culture Hires
+          </span>
+        </Link>
+
+        {/* Icon */}
+        <div
+          style={{
+            width: "56px",
+            height: "56px",
+            borderRadius: "14px",
+            backgroundColor: "#F5F3ED",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: "1.5rem",
+          }}
+        >
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+            <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" stroke="#1C1C1A" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </div>
+
+        <h1 style={{ fontFamily: F.display, fontSize: "1.625rem", fontWeight: 800, color: "#1C1C1A", letterSpacing: "-0.02em", marginBottom: "0.5rem" }}>
+          Check your email
+        </h1>
+        <p style={{ fontFamily: F.body, fontSize: "0.875rem", color: "#6B6B6B", marginBottom: "2rem", lineHeight: 1.6 }}>
           We sent a 6-digit code to{" "}
-          <span className="font-medium text-gray-700">{email || "your email"}</span>
+          <span style={{ fontWeight: 600, color: "#1C1C1A" }}>
+            {email || "your email"}
+          </span>
         </p>
 
-        <div className="mb-6 flex justify-center gap-3" onPaste={handlePaste}>
+        {/* OTP inputs */}
+        <div
+          style={{ display: "flex", gap: "0.625rem", marginBottom: "1.5rem", justifyContent: "center" }}
+          onPaste={handlePaste}
+        >
           {otp.map((digit, i) => (
             <input
               key={i}
@@ -121,31 +189,89 @@ export default function VerifyOtpPage() {
               value={digit}
               onChange={(e) => handleChange(i, e.target.value)}
               onKeyDown={(e) => handleKeyDown(i, e)}
-              className="h-14 w-12 rounded-lg border-2 border-gray-300 text-center text-2xl font-bold text-gray-900 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
+              style={{
+                width: "48px",
+                height: "56px",
+                textAlign: "center",
+                fontSize: "1.375rem",
+                fontWeight: 700,
+                fontFamily: F.display,
+                color: "#1C1C1A",
+                border: `2px solid ${digit ? "#BBFF3B" : "#E5E4DC"}`,
+                borderRadius: "10px",
+                outline: "none",
+                backgroundColor: digit ? "rgba(187,255,59,0.06)" : "#FAFAF8",
+                transition: "border-color 0.15s, background-color 0.15s",
+              }}
+              onFocus={(e) => {
+                if (!e.currentTarget.value) e.currentTarget.style.borderColor = "#BBFF3B";
+              }}
+              onBlur={(e) => {
+                if (!e.currentTarget.value) e.currentTarget.style.borderColor = "#E5E4DC";
+              }}
             />
           ))}
         </div>
 
         {error && (
-          <p className="mb-4 text-sm text-red-500">{error}</p>
+          <div style={{ width: "100%", backgroundColor: "#FEF2F2", border: "1px solid #FECACA", borderRadius: "8px", padding: "0.625rem 0.875rem", fontFamily: F.body, fontSize: "0.8125rem", color: "#DC2626", marginBottom: "1rem" }}>
+            {error}
+          </div>
         )}
 
         <button
           onClick={handleSubmit}
           disabled={otp.some((d) => !d) || loading}
-          className="mb-4 w-full rounded-lg bg-primary-600 py-3 text-lg font-semibold text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+          style={{
+            width: "100%",
+            backgroundColor: otp.every((d) => d) && !loading ? "#BBFF3B" : "#E5E5DC",
+            color: otp.every((d) => d) && !loading ? "#0C0E13" : "#9C9C94",
+            border: "none",
+            borderRadius: "8px",
+            padding: "0.8125rem",
+            fontFamily: F.body,
+            fontSize: "0.9375rem",
+            fontWeight: 700,
+            cursor: otp.some((d) => !d) || loading ? "not-allowed" : "pointer",
+            marginBottom: "1.25rem",
+            transition: "background-color 0.15s",
+          }}
         >
-          {loading ? "Verifying..." : "Verify"}
+          {loading ? "Verifying…" : "Verify Code"}
         </button>
 
         <button
           onClick={handleResend}
           disabled={cooldown > 0}
-          className="text-sm text-gray-500 transition hover:text-primary-600 disabled:cursor-not-allowed disabled:opacity-30"
+          style={{
+            fontFamily: F.body,
+            fontSize: "0.8125rem",
+            color: cooldown > 0 ? "#9C9C94" : "#1C1C1A",
+            background: "none",
+            border: "none",
+            cursor: cooldown > 0 ? "not-allowed" : "pointer",
+            textDecoration: cooldown > 0 ? "none" : "underline",
+            textDecorationColor: "#BBFF3B",
+            textUnderlineOffset: "3px",
+          }}
         >
-          {cooldown > 0 ? `Resend OTP in ${cooldown}s` : "Resend OTP"}
+          {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
         </button>
       </div>
     </main>
+  );
+}
+
+export default function VerifyOtpPage() {
+  return (
+    <Suspense
+      fallback={
+        <div style={{ minHeight: "100vh", backgroundColor: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <p style={{ color: "#6B6B6B", fontFamily: "sans-serif" }}>Loading…</p>
+        </div>
+      }
+    >
+      <VerifyOtpForm />
+    </Suspense>
   );
 }
