@@ -108,7 +108,11 @@ function VerifyOtpForm() {
   async function handleResend() {
     if (cooldown > 0 || !email) return;
     const supabase = createClient();
-    await supabase.auth.resend({ type: "signup", email });
+    await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    });
     setCooldown(60);
   }
 
