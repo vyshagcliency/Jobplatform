@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const S = {
   displayFont: "var(--font-syne), sans-serif",
@@ -16,78 +17,104 @@ const S = {
   orangeMid: "#FDDDD0",
 } as const;
 
-function PersonIllustration() {
+function HeroPhoto() {
   return (
-    <svg
-      viewBox="0 0 400 460"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ maxWidth: 380, width: "100%" }}
-      aria-hidden
-    >
-      {/* Decorative rings */}
-      <circle cx="200" cy="250" r="192" fill="rgba(255,92,44,0.04)" />
-      <circle cx="200" cy="250" r="148" stroke="rgba(255,92,44,0.10)" strokeWidth="1" />
-      <circle cx="200" cy="250" r="105" stroke="rgba(255,92,44,0.06)" strokeWidth="1" />
+    <div style={{ position: "relative", maxWidth: 420, width: "100%" }}>
+      {/* Decorative offset border */}
+      <div
+        aria-hidden
+        style={{
+          position: "absolute",
+          inset: 0,
+          translate: "12px 12px",
+          borderRadius: "20px",
+          border: "2px solid rgba(255,92,44,0.2)",
+          zIndex: 0,
+        }}
+      />
 
-      {/* Scattered dots */}
-      <circle cx="78"  cy="115" r="2.5" fill="#FF5C2C" opacity="0.4" />
-      <circle cx="58"  cy="152" r="1.5" fill="#FF5C2C" opacity="0.25" />
-      <circle cx="96"  cy="86"  r="2"   fill="#FF5C2C" opacity="0.25" />
-      <circle cx="328" cy="345" r="2.5" fill="#FF5C2C" opacity="0.35" />
-      <circle cx="350" cy="315" r="1.5" fill="#FF5C2C" opacity="0.2" />
-      <circle cx="42"  cy="310" r="2"   fill="#FF5C2C" opacity="0.18" />
+      {/* Photo frame */}
+      <div
+        style={{
+          position: "relative",
+          borderRadius: "20px",
+          overflow: "hidden",
+          aspectRatio: "4/5",
+          zIndex: 1,
+          boxShadow: "0 20px 60px rgba(0,0,0,0.10)",
+        }}
+      >
+        <Image
+          src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80"
+          alt="Young professional working on laptop"
+          fill
+          style={{ objectFit: "cover", objectPosition: "center top" }}
+          priority
+        />
+      </div>
 
-      {/* Body — warm caramel */}
-      <path d="M148 172 C148 155 170 148 200 148 C230 148 252 155 252 172 L268 295 H132 Z" fill="#F0C090" />
-      {/* Collar */}
-      <path d="M182 172 L200 195 L218 172" fill="#FEF8F0" />
-
-      {/* Head */}
-      <circle cx="200" cy="108" r="44" fill="#E8A868" />
-      {/* Hair */}
-      <path d="M160 100 Q160 64 200 64 Q240 64 240 100 Q236 78 200 76 Q164 78 160 100Z" fill="#2D1B12" />
-
-      {/* Eyes */}
-      <ellipse cx="188" cy="112" rx="3.5" ry="4"   fill="#1C1917" opacity="0.85" />
-      <ellipse cx="212" cy="112" rx="3.5" ry="4"   fill="#1C1917" opacity="0.85" />
-      <circle  cx="189.5" cy="110" r="1"            fill="white"   opacity="0.7" />
-      <circle  cx="213.5" cy="110" r="1"            fill="white"   opacity="0.7" />
-
-      {/* Smile */}
-      <path d="M191 127 Q200 135 209 127" stroke="#78716C" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-
-      {/* Laptop screen */}
-      <rect x="130" y="292" width="140" height="96" rx="7" fill="#E5DECE" stroke="rgba(0,0,0,0.09)" strokeWidth="1" />
-      <rect x="137" y="299" width="126" height="80" rx="4" fill="#faf7f2" />
-      {/* Code lines */}
-      <rect x="145" y="311" width="52" height="3"   rx="1.5" fill="#FF5C2C" opacity="0.80" />
-      <rect x="145" y="320" width="84" height="2.5" rx="1.25" fill="#A8A29E" opacity="0.5"  />
-      <rect x="145" y="328" width="62" height="2.5" rx="1.25" fill="#A8A29E" opacity="0.4"  />
-      <rect x="153" y="336" width="72" height="2.5" rx="1.25" fill="#FF5C2C" opacity="0.35" />
-      <rect x="145" y="344" width="48" height="2.5" rx="1.25" fill="#A8A29E" opacity="0.35" />
-      <rect x="145" y="352" width="88" height="2.5" rx="1.25" fill="#A8A29E" opacity="0.25" />
-      <rect x="153" y="360" width="56" height="2.5" rx="1.25" fill="#FF5C2C" opacity="0.22" />
-      {/* Laptop base */}
-      <rect x="118" y="388" width="164" height="9" rx="4.5" fill="#D5C8B5" />
-
-      {/* Floating job card — top right */}
-      <rect x="277" y="119" width="110" height="74" rx="10" fill="rgba(0,0,0,0.04)" />
-      <rect x="274" y="116" width="110" height="74" rx="10" fill="white" stroke="rgba(0,0,0,0.08)" strokeWidth="1" />
-      <rect x="286" y="128" width="52" height="3"   rx="1.5" fill="#1C1917" opacity="0.75" />
-      <rect x="286" y="137" width="78" height="2.5" rx="1.25" fill="#A8A29E" opacity="0.5"  />
-      <rect x="286" y="145" width="60" height="2.5" rx="1.25" fill="#A8A29E" opacity="0.4"  />
-      <rect x="286" y="156" width="50" height="20"  rx="10"  fill="#FEF0EB" />
-      <text x="311" y="170" textAnchor="middle" fill="#FF5C2C" fontSize="8.5" fontWeight="600" fontFamily="sans-serif">Apply</text>
-
-      {/* Match badge — left */}
-      <rect x="8"  y="196" width="112" height="30" rx="15" fill="#FEF0EB" stroke="rgba(255,92,44,0.25)" strokeWidth="1" />
-      <text x="64" y="216" textAnchor="middle" fill="#FF5C2C" fontSize="9.5" fontWeight="700" fontFamily="sans-serif">95% Match</text>
+      {/* Match badge — top left */}
+      <div
+        style={{
+          position: "absolute",
+          top: "1.5rem",
+          left: "-1.75rem",
+          zIndex: 2,
+          backgroundColor: "#ffffff",
+          border: "1px solid rgba(255,92,44,0.2)",
+          borderRadius: "999px",
+          padding: "0.45rem 1rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.4rem",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+        }}
+      >
+        <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#22c55e", display: "block", flexShrink: 0 }} />
+        <span style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: "0.78rem", fontWeight: 700, color: "#1C1917", whiteSpace: "nowrap" }}>
+          95% Culture Match
+        </span>
+      </div>
 
       {/* Hired badge — bottom right */}
-      <rect x="292" y="292" width="84" height="30" rx="15" fill="#FF5C2C" />
-      <text x="334" y="312" textAnchor="middle" fill="white" fontSize="10.5" fontWeight="700" fontFamily="sans-serif">Hired!</text>
-    </svg>
+      <div
+        style={{
+          position: "absolute",
+          bottom: "2rem",
+          right: "-1.25rem",
+          zIndex: 2,
+          backgroundColor: "#FF5C2C",
+          borderRadius: "12px",
+          padding: "0.6rem 1.1rem",
+          boxShadow: "0 6px 20px rgba(255,92,44,0.35)",
+        }}
+      >
+        <div style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: "0.7rem", fontWeight: 600, color: "rgba(255,255,255,0.75)", marginBottom: "0.1rem" }}>
+          Status
+        </div>
+        <div style={{ fontFamily: "var(--font-syne), sans-serif", fontSize: "0.95rem", fontWeight: 800, color: "#ffffff" }}>
+          Hired!
+        </div>
+      </div>
+
+      {/* Paid role badge — bottom left */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: "1rem",
+          left: "-1rem",
+          zIndex: 2,
+          backgroundColor: "#ffffff",
+          borderRadius: "10px",
+          padding: "0.5rem 0.9rem",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+          border: "1px solid rgba(0,0,0,0.07)",
+        }}
+      >
+        <div style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: "0.72rem", fontWeight: 600, color: "#78716C" }}>Monthly</div>
+        <div style={{ fontFamily: "var(--font-syne), sans-serif", fontSize: "0.88rem", fontWeight: 800, color: "#1C1917" }}>₹25,000</div>
+      </div>
+    </div>
   );
 }
 
@@ -256,12 +283,12 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right — illustration */}
+          {/* Right — real photo */}
           <div
             className="hero-illustration"
-            style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
+            style={{ display: "flex", justifyContent: "center", alignItems: "center", padding: "1.5rem 2rem 1.5rem 1rem" }}
           >
-            <PersonIllustration />
+            <HeroPhoto />
           </div>
         </div>
       </section>
