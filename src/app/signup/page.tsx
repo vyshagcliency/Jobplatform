@@ -42,21 +42,7 @@ function SignupForm() {
         return;
       }
 
-      if (data.user) {
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: data.user.id,
-          role,
-          full_name: fullName,
-          onboarding_status: "pending",
-        });
-
-        if (profileError) {
-          setError(profileError.message);
-          setLoading(false);
-          return;
-        }
-      }
-
+      // Profile row is auto-created by a database trigger on auth.users
       router.push("/verify-otp");
     } catch {
       setError("Something went wrong. Please try again.");
