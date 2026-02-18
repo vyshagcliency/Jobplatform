@@ -5,11 +5,46 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+function BrandLogo() {
+  return (
+    <svg
+      width="30"
+      height="30"
+      viewBox="0 0 30 30"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <rect width="30" height="30" rx="7" fill="#BBFF3B" />
+      <path
+        d="M15 21 L15 9"
+        stroke="#0C0E13"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M10.5 14 L15 9 L19.5 14"
+        stroke="#0C0E13"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M11.5 19.5 L18.5 19.5"
+        stroke="#0C0E13"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export default function Navbar() {
   const router = useRouter();
   const supabase = createClient();
 
   const [role, setRole] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -19,7 +54,11 @@ export default function Navbar() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) return;
+
+      if (!user) {
+        setLoaded(true);
+        return;
+      }
 
       setUserId(user.id);
 
@@ -31,7 +70,6 @@ export default function Navbar() {
 
       if (profile) setRole(profile.role);
 
-      // Get unread message count
       const { count } = await supabase
         .from("messages")
         .select("id", { count: "exact", head: true })
@@ -39,11 +77,11 @@ export default function Navbar() {
         .eq("is_read", false);
 
       setUnreadCount(count ?? 0);
+      setLoaded(true);
     }
     load();
   }, [supabase]);
 
-  // Realtime unread count
   useEffect(() => {
     if (!userId) return;
 
@@ -84,10 +122,38 @@ export default function Navbar() {
   ];
 
   const links = role === "employer" ? employerLinks : candidateLinks;
+  const isGuest = loaded && !role;
+  const isLoggedIn = loaded && !!role;
+
+  const linkStyle: React.CSSProperties = {
+    fontFamily: "var(--font-dm-sans), sans-serif",
+    fontSize: "0.875rem",
+    fontWeight: 500,
+    color: "#9CA3AF",
+    textDecoration: "none",
+  };
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-gray-200 bg-white/80 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+    <nav
+      className="sticky top-0 z-50"
+      style={{
+        backgroundColor: "rgba(12, 14, 19, 0.9)",
+        backdropFilter: "blur(14px)",
+        WebkitBackdropFilter: "blur(14px)",
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "1280px",
+          margin: "0 auto",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0.75rem 1.5rem",
+        }}
+      >
+        {/* Brand — left-anchored */}
         <Link
           href={
             role === "employer"
@@ -96,67 +162,153 @@ export default function Navbar() {
               ? "/jobs"
               : "/"
           }
-          className="text-xl font-bold text-primary-600"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            textDecoration: "none",
+          }}
         >
-          Underdog Jobs
+          <BrandLogo />
+          <span
+            style={{
+              fontFamily: "var(--font-syne), sans-serif",
+              fontWeight: 700,
+              fontSize: "1.0625rem",
+              color: "#EDEAE4",
+              letterSpacing: "-0.01em",
+            }}
+          >
+            Culture Hires
+          </span>
         </Link>
 
-        {/* Desktop nav */}
-        {role && (
-          <div className="hidden items-center gap-6 md:flex">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-gray-600 transition hover:text-primary-600"
-              >
-                {link.label}
+        {/* Right side */}
+        <div style={{ display: "flex", alignItems: "center", gap: "1.25rem" }}>
+          {/* Guest state */}
+          {isGuest && (
+            <>
+              <Link href="/login" style={linkStyle}>
+                Log in
               </Link>
-            ))}
+              <Link
+                href="/signup"
+                style={{
+                  fontFamily: "var(--font-dm-sans), sans-serif",
+                  fontSize: "0.875rem",
+                  fontWeight: 600,
+                  backgroundColor: "#BBFF3B",
+                  color: "#0C0E13",
+                  padding: "0.5rem 1.125rem",
+                  borderRadius: "6px",
+                  textDecoration: "none",
+                }}
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
 
-            <Link
-              href="/chat"
-              className="relative text-sm font-medium text-gray-600 transition hover:text-primary-600"
-            >
-              Chat
-              {unreadCount > 0 && (
-                <span className="absolute -right-3 -top-2 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              )}
-            </Link>
+          {/* Logged-in: desktop links */}
+          {isLoggedIn && (
+            <>
+              <div className="hidden md:flex items-center gap-6">
+                {links.map((link) => (
+                  <Link key={link.href} href={link.href} style={linkStyle}>
+                    {link.label}
+                  </Link>
+                ))}
 
-            <button
-              onClick={handleLogout}
-              className="text-sm font-medium text-gray-500 transition hover:text-red-500"
-            >
-              Logout
-            </button>
-          </div>
-        )}
+                <Link
+                  href="/chat"
+                  style={{ ...linkStyle, position: "relative" }}
+                >
+                  Chat
+                  {unreadCount > 0 && (
+                    <span
+                      style={{
+                        position: "absolute",
+                        top: "-8px",
+                        right: "-12px",
+                        backgroundColor: "#FF5C2C",
+                        color: "white",
+                        borderRadius: "50%",
+                        width: "16px",
+                        height: "16px",
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </Link>
 
-        {/* Mobile hamburger */}
-        {role && (
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden"
-          >
-            <svg className="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        )}
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    ...linkStyle,
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "#6B7280",
+                  }}
+                >
+                  Logout
+                </button>
+              </div>
+
+              {/* Mobile hamburger */}
+              <button
+                onClick={() => setMenuOpen(!menuOpen)}
+                className="md:hidden"
+                aria-label="Toggle menu"
+                style={{ background: "none", border: "none", cursor: "pointer" }}
+              >
+                <svg
+                  width="22"
+                  height="22"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="#9CA3AF"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                </svg>
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Mobile menu */}
-      {menuOpen && role && (
-        <div className="border-t border-gray-100 bg-white px-4 pb-4 md:hidden">
+      {menuOpen && isLoggedIn && (
+        <div
+          className="md:hidden"
+          style={{
+            borderTop: "1px solid rgba(255,255,255,0.07)",
+            backgroundColor: "#0C0E13",
+            padding: "0.25rem 1.5rem 1rem",
+          }}
+        >
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={() => setMenuOpen(false)}
-              className="block py-3 text-sm font-medium text-gray-600"
+              style={{
+                display: "block",
+                padding: "0.75rem 0",
+                ...linkStyle,
+                borderBottom: "1px solid rgba(255,255,255,0.05)",
+              }}
             >
               {link.label}
             </Link>
@@ -164,18 +316,50 @@ export default function Navbar() {
           <Link
             href="/chat"
             onClick={() => setMenuOpen(false)}
-            className="flex items-center gap-2 py-3 text-sm font-medium text-gray-600"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              padding: "0.75rem 0",
+              ...linkStyle,
+              borderBottom: "1px solid rgba(255,255,255,0.05)",
+            }}
           >
             Chat
             {unreadCount > 0 && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+              <span
+                style={{
+                  backgroundColor: "#FF5C2C",
+                  color: "white",
+                  borderRadius: "50%",
+                  width: "18px",
+                  height: "18px",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
                 {unreadCount}
               </span>
             )}
           </Link>
           <button
             onClick={handleLogout}
-            className="block py-3 text-sm font-medium text-red-500"
+            style={{
+              display: "block",
+              width: "100%",
+              textAlign: "left",
+              padding: "0.75rem 0",
+              fontFamily: "var(--font-dm-sans), sans-serif",
+              fontSize: "0.875rem",
+              fontWeight: 500,
+              color: "#FF5C2C",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+            }}
           >
             Logout
           </button>
