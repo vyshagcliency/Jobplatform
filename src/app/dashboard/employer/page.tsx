@@ -172,11 +172,11 @@ export default function EmployerDashboard() {
   const totalApplicants = groups.reduce((sum, g) => sum + g.applicants.length, 0);
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#faf7f2", padding: "2.5rem 1.5rem" }}>
-      <div style={{ maxWidth: 860, margin: "0 auto" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "#faf7f2", padding: "1.75rem 1.25rem" }}>
+      <div style={{ maxWidth: 800, margin: "0 auto" }}>
 
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "2rem", flexWrap: "wrap", gap: "1rem" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "1.5rem", flexWrap: "wrap", gap: "0.75rem" }}>
           <div>
             <h1 style={{
               fontFamily: "var(--font-display)", fontSize: "clamp(1.6rem, 3vw, 2.25rem)",
