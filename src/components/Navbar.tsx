@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 function BrandLogo() {
@@ -41,7 +41,9 @@ function BrandLogo() {
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const supabase = createClient();
+  const isOnboarding = pathname?.startsWith("/onboarding");
 
   const [role, setRole] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -129,19 +131,28 @@ export default function Navbar() {
     fontFamily: "var(--font-dm-sans), sans-serif",
     fontSize: "0.875rem",
     fontWeight: 500,
-    color: "#9CA3AF",
+    color: isOnboarding ? "#78716C" : "#9CA3AF",
     textDecoration: "none",
   };
 
   return (
     <nav
       className="sticky top-0 z-50"
-      style={{
-        backgroundColor: "rgba(12, 14, 19, 0.9)",
-        backdropFilter: "blur(14px)",
-        WebkitBackdropFilter: "blur(14px)",
-        borderBottom: "1px solid rgba(255,255,255,0.07)",
-      }}
+      style={
+        isOnboarding
+          ? {
+              backgroundColor: "rgba(250, 247, 242, 0.95)",
+              backdropFilter: "blur(14px)",
+              WebkitBackdropFilter: "blur(14px)",
+              borderBottom: "1px solid rgba(0,0,0,0.08)",
+            }
+          : {
+              backgroundColor: "rgba(12, 14, 19, 0.9)",
+              backdropFilter: "blur(14px)",
+              WebkitBackdropFilter: "blur(14px)",
+              borderBottom: "1px solid rgba(255,255,255,0.07)",
+            }
+      }
     >
       <div
         style={{
@@ -175,7 +186,7 @@ export default function Navbar() {
               fontFamily: "var(--font-syne), sans-serif",
               fontWeight: 700,
               fontSize: "1.0625rem",
-              color: "#EDEAE4",
+              color: isOnboarding ? "#1C1917" : "#EDEAE4",
               letterSpacing: "-0.01em",
             }}
           >
@@ -254,7 +265,7 @@ export default function Navbar() {
                     background: "none",
                     border: "none",
                     cursor: "pointer",
-                    color: "#6B7280",
+                    color: isOnboarding ? "#A8A29E" : "#6B7280",
                   }}
                 >
                   Logout
@@ -293,8 +304,8 @@ export default function Navbar() {
         <div
           className="md:hidden"
           style={{
-            borderTop: "1px solid rgba(255,255,255,0.07)",
-            backgroundColor: "#0C0E13",
+            borderTop: isOnboarding ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.07)",
+            backgroundColor: isOnboarding ? "#faf7f2" : "#0C0E13",
             padding: "0.25rem 1.5rem 1rem",
           }}
         >
