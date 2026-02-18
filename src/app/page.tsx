@@ -2,8 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 
 const S = {
-  displayFont: "var(--font-syne), sans-serif",
-  bodyFont: "var(--font-dm-sans), sans-serif",
+  displayFont: "var(--font-display), sans-serif",
+  bodyFont: "var(--font-sans), sans-serif",
   bg: "#faf7f2",
   bgWarm: "#fff8f3",
   surface: "#ffffff",
@@ -71,7 +71,7 @@ function HeroPhoto() {
         }}
       >
         <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#22c55e", display: "block", flexShrink: 0 }} />
-        <span style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: "0.78rem", fontWeight: 700, color: "#1C1917", whiteSpace: "nowrap" }}>
+        <span style={{ fontFamily: "var(--font-sans), sans-serif", fontSize: "0.78rem", fontWeight: 700, color: "#1C1917", whiteSpace: "nowrap" }}>
           95% Culture Match
         </span>
       </div>
@@ -89,10 +89,10 @@ function HeroPhoto() {
           boxShadow: "0 6px 20px rgba(255,92,44,0.35)",
         }}
       >
-        <div style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: "0.7rem", fontWeight: 600, color: "rgba(255,255,255,0.75)", marginBottom: "0.1rem" }}>
+        <div style={{ fontFamily: "var(--font-sans), sans-serif", fontSize: "0.7rem", fontWeight: 600, color: "rgba(255,255,255,0.75)", marginBottom: "0.1rem" }}>
           Status
         </div>
-        <div style={{ fontFamily: "var(--font-syne), sans-serif", fontSize: "0.95rem", fontWeight: 800, color: "#ffffff" }}>
+        <div style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "0.95rem", fontWeight: 800, color: "#ffffff" }}>
           Hired!
         </div>
       </div>
@@ -111,8 +111,8 @@ function HeroPhoto() {
           border: "1px solid rgba(0,0,0,0.07)",
         }}
       >
-        <div style={{ fontFamily: "var(--font-dm-sans), sans-serif", fontSize: "0.72rem", fontWeight: 600, color: "#78716C" }}>Monthly</div>
-        <div style={{ fontFamily: "var(--font-syne), sans-serif", fontSize: "0.88rem", fontWeight: 800, color: "#1C1917" }}>₹25,000</div>
+        <div style={{ fontFamily: "var(--font-sans), sans-serif", fontSize: "0.72rem", fontWeight: 600, color: "#78716C" }}>Monthly</div>
+        <div style={{ fontFamily: "var(--font-display), sans-serif", fontSize: "0.88rem", fontWeight: 800, color: "#1C1917" }}>₹25,000</div>
       </div>
     </div>
   );

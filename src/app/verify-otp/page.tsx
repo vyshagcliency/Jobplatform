@@ -5,8 +5,8 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 const F = {
-  display: "var(--font-syne), sans-serif",
-  body: "var(--font-dm-sans), sans-serif",
+  display: "var(--font-display), sans-serif",
+  body: "var(--font-sans), sans-serif",
 } as const;
 
 function CheckEmailContent() {

@@ -128,7 +128,7 @@ export default function Navbar() {
   const isLoggedIn = loaded && !!role;
 
   const linkStyle: React.CSSProperties = {
-    fontFamily: "var(--font-dm-sans), sans-serif",
+    fontFamily: "var(--font-sans), sans-serif",
     fontSize: "0.875rem",
     fontWeight: 500,
     color: isLight ? "#78716C" : "#9CA3AF",
@@ -183,7 +183,7 @@ export default function Navbar() {
           <BrandLogo />
           <span
             style={{
-              fontFamily: "var(--font-syne), sans-serif",
+              fontFamily: "var(--font-display), sans-serif",
               fontWeight: 700,
               fontSize: "1.0625rem",
               color: isLight ? "#1C1917" : "#EDEAE4",
@@ -205,7 +205,7 @@ export default function Navbar() {
               <Link
                 href="/signup"
                 style={{
-                  fontFamily: "var(--font-dm-sans), sans-serif",
+                  fontFamily: "var(--font-sans), sans-serif",
                   fontSize: "0.875rem",
                   fontWeight: 600,
                   backgroundColor: "#BBFF3B",
@@ -363,7 +363,7 @@ export default function Navbar() {
               width: "100%",
               textAlign: "left",
               padding: "0.75rem 0",
-              fontFamily: "var(--font-dm-sans), sans-serif",
+              fontFamily: "var(--font-sans), sans-serif",
               fontSize: "0.875rem",
               fontWeight: 500,
               color: "#FF5C2C",

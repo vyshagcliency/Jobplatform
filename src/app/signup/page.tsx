@@ -6,8 +6,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
 const F = {
-  display: "var(--font-syne), sans-serif",
-  body: "var(--font-dm-sans), sans-serif",
+  display: "var(--font-display), sans-serif",
+  body: "var(--font-sans), sans-serif",
 } as const;
 
 const inputStyle: React.CSSProperties = {
