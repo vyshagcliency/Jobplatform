@@ -14,6 +14,10 @@ interface Job {
   skill_tags: string[];
   created_at: string;
   companies: { name: string; logo_url: string | null };
+  external_url: string | null;
+  source: string | null;
+  source_company_name: string | null;
+  source_logo_url: string | null;
 }
 
 const roleTypeLabels: Record<string, string> = {
@@ -40,6 +44,14 @@ const styleColors: Record<string, { bg: string; text: string }> = {
   hybrid:    { bg: "#EDE9FE", text: "#7C3AED" },
 };
 
+const sourceLabels: Record<string, string> = {
+  linkedin: "LinkedIn",
+  naukri: "Naukri",
+  indeed: "Indeed",
+  company_website: "Company Site",
+  other: "External",
+};
+
 // Mock jobs shown when database is empty so the page doesn't look dead
 const mockJobs: Job[] = [
   {
@@ -48,6 +60,7 @@ const mockJobs: Job[] = [
     work_style: "hybrid", skill_tags: ["React", "JavaScript", "CSS"],
     created_at: new Date(Date.now() - 86400000).toISOString(),
     companies: { name: "PixelCraft Studios", logo_url: null },
+    external_url: null, source: null, source_company_name: null, source_logo_url: null,
   },
   {
     id: "mock-2", title: "Marketing Associate",
@@ -55,6 +68,7 @@ const mockJobs: Job[] = [
     work_style: "in_office", skill_tags: ["Content Writing", "Marketing", "SEO"],
     created_at: new Date(Date.now() - 86400000 * 2).toISOString(),
     companies: { name: "GrowthLoop", logo_url: null },
+    external_url: null, source: null, source_company_name: null, source_logo_url: null,
   },
   {
     id: "mock-3", title: "UI/UX Design Intern",
@@ -62,6 +76,7 @@ const mockJobs: Job[] = [
     work_style: "remote", skill_tags: ["Figma", "UI/UX Design", "Prototyping"],
     created_at: new Date(Date.now() - 86400000 * 3).toISOString(),
     companies: { name: "Designway", logo_url: null },
+    external_url: null, source: null, source_company_name: null, source_logo_url: null,
   },
   {
     id: "mock-4", title: "Data Analyst",
@@ -69,6 +84,7 @@ const mockJobs: Job[] = [
     work_style: "hybrid", skill_tags: ["Python", "SQL", "Data Analysis"],
     created_at: new Date(Date.now() - 86400000 * 4).toISOString(),
     companies: { name: "InsightGrid", logo_url: null },
+    external_url: null, source: null, source_company_name: null, source_logo_url: null,
   },
   {
     id: "mock-5", title: "Social Media Freelancer",
@@ -76,6 +92,7 @@ const mockJobs: Job[] = [
     work_style: "remote", skill_tags: ["Marketing", "Content Writing", "Communication"],
     created_at: new Date(Date.now() - 86400000 * 5).toISOString(),
     companies: { name: "BrandSpark", logo_url: null },
+    external_url: null, source: null, source_company_name: null, source_logo_url: null,
   },
   {
     id: "mock-6", title: "Full-Stack Developer",
@@ -83,6 +100,26 @@ const mockJobs: Job[] = [
     work_style: "in_office", skill_tags: ["React", "Node.js", "PostgreSQL"],
     created_at: new Date(Date.now() - 86400000 * 6).toISOString(),
     companies: { name: "CodeNest", logo_url: null },
+    external_url: null, source: null, source_company_name: null, source_logo_url: null,
+  },
+  // External mock jobs
+  {
+    id: "mock-ext-1", title: "Software Engineer",
+    role_type: "full_time", compensation: 80000, location: "Bangalore",
+    work_style: "hybrid", skill_tags: ["Go", "Python", "Kubernetes"],
+    created_at: new Date(Date.now() - 86400000 * 1.5).toISOString(),
+    companies: { name: "Google", logo_url: null },
+    external_url: "https://linkedin.com/jobs/example", source: "linkedin",
+    source_company_name: "Google", source_logo_url: null,
+  },
+  {
+    id: "mock-ext-2", title: "Marketing Intern",
+    role_type: "internship", compensation: 18000, location: "Gurugram",
+    work_style: "in_office", skill_tags: ["Marketing", "SEO", "Content Writing"],
+    created_at: new Date(Date.now() - 86400000 * 2.5).toISOString(),
+    companies: { name: "Zomato", logo_url: null },
+    external_url: "https://naukri.com/jobs/example", source: "naukri",
+    source_company_name: "Zomato", source_logo_url: null,
   },
 ];
 
@@ -100,6 +137,20 @@ function CompanyInitial({ name }: { name: string }) {
     }}>
       {name[0]}
     </div>
+  );
+}
+
+function SourceBadge({ source }: { source: string }) {
+  return (
+    <span style={{
+      fontFamily: "var(--font-sans)", fontSize: "0.62rem", fontWeight: 600,
+      padding: "0.15rem 0.5rem", borderRadius: "999px",
+      backgroundColor: "#F0F9FF", color: "#0369A1",
+      border: "1px solid rgba(3,105,161,0.12)",
+      whiteSpace: "nowrap",
+    }}>
+      via {sourceLabels[source] ?? "External"}
+    </span>
   );
 }
 
@@ -128,7 +179,7 @@ export default function JobsPage() {
 
     let query = supabase
       .from("jobs")
-      .select("id, title, role_type, compensation, location, work_style, skill_tags, created_at, companies(name, logo_url)")
+      .select("id, title, role_type, compensation, location, work_style, skill_tags, created_at, companies(name, logo_url), external_url, source, source_company_name, source_logo_url")
       .order("created_at", { ascending: false })
       .range(from, from + 19);
 
@@ -319,39 +370,39 @@ export default function JobsPage() {
               const rc = roleColors[job.role_type] ?? { bg: "#F3F4F6", text: "#4B5563" };
               const sc = styleColors[job.work_style] ?? { bg: "#F3F4F6", text: "#4B5563" };
               const isMock = job.id.startsWith("mock-");
-              const Wrapper = isMock ? "div" : Link;
-              const wrapperProps = isMock ? {} : { href: `/jobs/${job.id}` };
-              return (
-                <Wrapper
-                  key={job.id}
-                  {...wrapperProps as Record<string, string>}
-                  style={{
-                    display: "flex", flexDirection: "column",
-                    backgroundColor: "#ffffff", borderRadius: "14px",
-                    border: "1px solid rgba(0,0,0,0.07)", padding: "1.25rem",
-                    textDecoration: "none", transition: "box-shadow 0.15s, transform 0.15s",
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-                    cursor: isMock ? "default" : "pointer",
-                  }}
-                  className={isMock ? "" : "job-card"}
-                >
+              const isExternal = !!job.external_url;
+              const displayName = job.source_company_name || job.companies?.name || "?";
+              const displayLogo = job.source_logo_url || job.companies?.logo_url || null;
+              const cardStyle: React.CSSProperties = {
+                display: "flex", flexDirection: "column",
+                backgroundColor: "#ffffff", borderRadius: "14px",
+                border: "1px solid rgba(0,0,0,0.07)", padding: "1.25rem",
+                textDecoration: "none", transition: "box-shadow 0.15s, transform 0.15s",
+                boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
+                cursor: isMock ? "default" : "pointer",
+              };
+              const cardContent = (
+                <>
                   {/* Company row */}
                   <div style={{ display: "flex", alignItems: "center", gap: "0.625rem", marginBottom: "0.875rem" }}>
-                    {job.companies?.logo_url ? (
+                    {displayLogo ? (
                       <img
-                        src={job.companies.logo_url} alt=""
+                        src={displayLogo} alt=""
                         style={{ width: 38, height: 38, borderRadius: 10, objectFit: "cover" }}
                       />
                     ) : (
-                      <CompanyInitial name={job.companies?.name ?? "?"} />
+                      <CompanyInitial name={displayName} />
                     )}
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{
-                        fontFamily: "var(--font-sans)", fontSize: "0.82rem", fontWeight: 500,
-                        color: "#78716C", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-                      }}>
-                        {job.companies?.name}
-                      </p>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                        <p style={{
+                          fontFamily: "var(--font-sans)", fontSize: "0.82rem", fontWeight: 500,
+                          color: "#78716C", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                        }}>
+                          {displayName}
+                        </p>
+                        {isExternal && job.source && <SourceBadge source={job.source} />}
+                      </div>
                       <p style={{ fontFamily: "var(--font-sans)", fontSize: "0.72rem", color: "#A8A29E" }}>
                         {formatPosted(job.created_at)}
                       </p>
@@ -428,7 +479,12 @@ export default function JobsPage() {
                       {job.location}
                     </p>
                   </div>
-                </Wrapper>
+                </>
+              );
+              return isMock ? (
+                <div key={job.id} style={cardStyle}>{cardContent}</div>
+              ) : (
+                <Link key={job.id} href={`/jobs/${job.id}`} style={cardStyle} className="job-card">{cardContent}</Link>
               );
             })}
           </div>

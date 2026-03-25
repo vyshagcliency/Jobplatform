@@ -5,6 +5,14 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
+const sourceLabels: Record<string, string> = {
+  linkedin: "LinkedIn",
+  naukri: "Naukri",
+  indeed: "Indeed",
+  company_website: "Company Site",
+  other: "External",
+};
+
 interface JobDetail {
   id: string;
   title: string;
@@ -16,6 +24,10 @@ interface JobDetail {
   skill_tags: string[];
   deadline: string;
   companies: { name: string; logo_url: string | null; vibe_description: string | null };
+  external_url: string | null;
+  source: string | null;
+  source_company_name: string | null;
+  source_logo_url: string | null;
 }
 
 export default function JobDetailPage() {
@@ -35,7 +47,7 @@ export default function JobDetailPage() {
     async function load() {
       const { data: jobData } = await supabase
         .from("jobs")
-        .select("id, title, description, role_type, compensation, location, work_style, skill_tags, deadline, companies(name, logo_url, vibe_description)")
+        .select("id, title, description, role_type, compensation, location, work_style, skill_tags, deadline, companies(name, logo_url, vibe_description), external_url, source, source_company_name, source_logo_url")
         .eq("id", jobId)
         .single();
 
@@ -107,6 +119,11 @@ export default function JobDetailPage() {
     );
   }
 
+  const isExternal = !!job.external_url;
+  const displayName = job.source_company_name || job.companies?.name || "?";
+  const displayLogo = job.source_logo_url || job.companies?.logo_url || null;
+  const sourceName = job.source ? (sourceLabels[job.source] ?? "External") : "External";
+
   return (
     <div className="min-h-screen bg-warm-50 px-4 py-8">
       <div className="mx-auto max-w-3xl">
@@ -119,20 +136,27 @@ export default function JobDetailPage() {
 
         <div className="rounded-2xl bg-white p-8 shadow-sm">
           <div className="mb-6 flex items-center gap-4">
-            {job.companies?.logo_url ? (
+            {displayLogo ? (
               <img
-                src={job.companies.logo_url}
+                src={displayLogo}
                 alt=""
                 className="h-14 w-14 rounded-xl object-cover"
               />
             ) : (
               <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary-100 text-2xl font-bold text-primary-600">
-                {job.companies?.name?.[0] ?? "?"}
+                {displayName[0] ?? "?"}
               </div>
             )}
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{job.title}</h1>
-              <p className="text-gray-500">{job.companies?.name}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-gray-500">{displayName}</p>
+                {isExternal && job.source && (
+                  <span className="rounded-full bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-700 border border-sky-100">
+                    via {sourceName}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -201,40 +225,58 @@ export default function JobDetailPage() {
             </div>
           )}
 
-          {showUpload && !hasResume && (
-            <div className="mb-4 rounded-xl border border-gray-200 p-4">
-              <p className="mb-2 text-sm text-gray-600">
-                Upload your resume to apply (PDF, max 5MB)
+          {/* External job: redirect button */}
+          {isExternal ? (
+            <div>
+              <p className="mb-3 text-center text-sm text-gray-500">
+                You&apos;ll be redirected to {sourceName} to complete your application
               </p>
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file && file.size <= 5 * 1024 * 1024)
-                    setResumeFile(file);
-                }}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
-              />
-              {resumeFile && (
-                <button
-                  onClick={handleApply}
-                  disabled={applying}
-                  className="mt-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
-                >
-                  Upload & Apply
-                </button>
-              )}
+              <button
+                onClick={() => window.open(job.external_url!, "_blank", "noopener,noreferrer")}
+                className="w-full rounded-xl bg-primary-600 py-4 text-lg font-semibold text-white transition hover:bg-primary-700"
+              >
+                Apply on {sourceName} &rarr;
+              </button>
             </div>
-          )}
+          ) : (
+            <>
+              {/* Native job: Quick Apply flow */}
+              {showUpload && !hasResume && (
+                <div className="mb-4 rounded-xl border border-gray-200 p-4">
+                  <p className="mb-2 text-sm text-gray-600">
+                    Upload your resume to apply (PDF, max 5MB)
+                  </p>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file && file.size <= 5 * 1024 * 1024)
+                        setResumeFile(file);
+                    }}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm"
+                  />
+                  {resumeFile && (
+                    <button
+                      onClick={handleApply}
+                      disabled={applying}
+                      className="mt-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
+                    >
+                      Upload & Apply
+                    </button>
+                  )}
+                </div>
+              )}
 
-          <button
-            onClick={handleApply}
-            disabled={applied || applying}
-            className="w-full rounded-xl bg-primary-600 py-4 text-lg font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
-          >
-            {applied ? "Applied" : applying ? "Applying..." : "Quick Apply"}
-          </button>
+              <button
+                onClick={handleApply}
+                disabled={applied || applying}
+                className="w-full rounded-xl bg-primary-600 py-4 text-lg font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
+              >
+                {applied ? "Applied" : applying ? "Applying..." : "Quick Apply"}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

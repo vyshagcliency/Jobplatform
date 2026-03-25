@@ -8,6 +8,12 @@ export default function PostJobPage() {
   const router = useRouter();
   const supabase = createClient();
 
+  const [isExternal, setIsExternal] = useState(false);
+  const [externalUrl, setExternalUrl] = useState("");
+  const [source, setSource] = useState("linkedin");
+  const [sourceCompanyName, setSourceCompanyName] = useState("");
+  const [sourceLogoUrl, setSourceLogoUrl] = useState("");
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [roleType, setRoleType] = useState<"internship" | "full_time" | "freelance">("internship");
@@ -38,6 +44,14 @@ export default function PostJobPage() {
       return;
     }
     if (!isCompValid) return;
+    if (isExternal && !externalUrl) {
+      setError("External apply URL is required.");
+      return;
+    }
+    if (isExternal && !sourceCompanyName) {
+      setError("Company name is required for external jobs.");
+      return;
+    }
 
     setLoading(true);
     setError("");
@@ -88,6 +102,14 @@ export default function PostJobPage() {
       skill_tags: skillTags,
       deadline: deadline || null,
       status: "active",
+      ...(isExternal
+        ? {
+            external_url: externalUrl,
+            source,
+            source_company_name: sourceCompanyName,
+            source_logo_url: sourceLogoUrl || null,
+          }
+        : {}),
     });
 
     if (insertError) {
@@ -99,12 +121,98 @@ export default function PostJobPage() {
     router.push("/dashboard/employer");
   }
 
+  const inputClass =
+    "w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-primary-500";
+
   return (
     <div className="min-h-screen bg-warm-50 px-4 py-8">
       <div className="mx-auto max-w-3xl rounded-2xl bg-white p-8 shadow-sm">
         <h1 className="mb-6 text-2xl font-bold text-gray-900">Post a Job</h1>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          {/* External Job Toggle */}
+          <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isExternal}
+              onClick={() => setIsExternal(!isExternal)}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors ${
+                isExternal ? "bg-primary-600" : "bg-gray-300"
+              }`}
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                  isExternal ? "translate-x-[22px]" : "translate-x-0.5"
+                } mt-0.5`}
+              />
+            </button>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">External Job</p>
+              <p className="text-xs text-gray-500">
+                Link to an external posting (LinkedIn, Naukri, company site)
+              </p>
+            </div>
+          </div>
+
+          {/* External Job Fields */}
+          {isExternal && (
+            <div className="space-y-4 rounded-xl border border-primary-200 bg-primary-50/50 p-5">
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Company Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Google, Flipkart, Zomato"
+                  value={sourceCompanyName}
+                  onChange={(e) => setSourceCompanyName(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  Company Logo URL
+                </label>
+                <input
+                  type="url"
+                  placeholder="https://example.com/logo.png"
+                  value={sourceLogoUrl}
+                  onChange={(e) => setSourceLogoUrl(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">
+                  External Apply URL *
+                </label>
+                <input
+                  type="url"
+                  required
+                  placeholder="https://linkedin.com/jobs/view/..."
+                  value={externalUrl}
+                  onChange={(e) => setExternalUrl(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-gray-700">Source</label>
+                <select
+                  value={source}
+                  onChange={(e) => setSource(e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="linkedin">LinkedIn</option>
+                  <option value="naukri">Naukri</option>
+                  <option value="indeed">Indeed</option>
+                  <option value="company_website">Company Website</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">Title *</label>
             <input
@@ -112,7 +220,7 @@ export default function PostJobPage() {
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-primary-500"
+              className={inputClass}
             />
           </div>
 
@@ -123,7 +231,7 @@ export default function PostJobPage() {
               rows={5}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-primary-500"
+              className={inputClass}
             />
           </div>
 
@@ -133,7 +241,7 @@ export default function PostJobPage() {
               <select
                 value={roleType}
                 onChange={(e) => setRoleType(e.target.value as typeof roleType)}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-primary-500"
+                className={inputClass}
               >
                 <option value="internship">Internship</option>
                 <option value="full_time">Full-time</option>
@@ -153,7 +261,7 @@ export default function PostJobPage() {
                 onChange={(e) =>
                   setCompensation(e.target.value ? Number(e.target.value) : "")
                 }
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-primary-500"
+                className={inputClass}
               />
               {compensation === 0 && (
                 <p className="mt-1 text-xs text-red-500">
@@ -170,7 +278,7 @@ export default function PostJobPage() {
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-primary-500"
+                className={inputClass}
               />
             </div>
 
@@ -179,7 +287,7 @@ export default function PostJobPage() {
               <select
                 value={workStyle}
                 onChange={(e) => setWorkStyle(e.target.value as typeof workStyle)}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-primary-500"
+                className={inputClass}
               >
                 <option value="remote">Remote</option>
                 <option value="in_office">In-office</option>
@@ -227,7 +335,7 @@ export default function PostJobPage() {
               type="date"
               value={deadline}
               onChange={(e) => setDeadline(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-primary-500"
+              className={inputClass}
             />
           </div>
 
