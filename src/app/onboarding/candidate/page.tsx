@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import ChatUI, { ChatMessage, ChatOption } from "@/components/chat/ChatUI";
+import { ChatMessage, ChatOption, AiMessage, PillOptions, TypingIndicator } from "@/components/chat/ChatUI";
 import { createClient } from "@/lib/supabase/client";
 import { candidateSections } from "@/lib/onboarding-questions";
 
@@ -11,6 +11,7 @@ type OnboardingState = "chat" | "college" | "resume" | "done" | "blocked";
 export default function CandidateOnboardingPage() {
   const router = useRouter();
   const supabase = createClient();
+  const bottomRef = useRef<HTMLDivElement>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [currentSection, setCurrentSection] = useState(0);
@@ -37,10 +38,14 @@ export default function CandidateOnboardingPage() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Auto-scroll on new messages
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
+
   const loadSection = useCallback(
     async (sectionIndex: number) => {
       if (sectionIndex >= candidateSections.length) {
-        // Move to college gate (section 7)
         setState("college");
         setMessages((prev) => [
           ...prev,
@@ -87,7 +92,6 @@ export default function CandidateOnboardingPage() {
   );
 
   useEffect(() => {
-    // Load saved progress
     async function loadProgress() {
       const {
         data: { user },
@@ -123,8 +127,6 @@ export default function CandidateOnboardingPage() {
 
           if (profile.college_id) {
             if (profile.resume_url) {
-              // Ensure onboarding_status is marked completed (fixes redirect loop
-              // when resume_url was saved but profiles update failed previously)
               await supabase
                 .from("profiles")
                 .update({ onboarding_status: "completed" })
@@ -160,7 +162,6 @@ export default function CandidateOnboardingPage() {
 
         loadSection(resumeSection);
       } else {
-        // Create candidate profile
         await supabase.from("candidate_profiles").insert({
           user_id: user.id,
         });
@@ -197,7 +198,6 @@ export default function CandidateOnboardingPage() {
     };
     setAnswers(newAnswers);
 
-    // Persist to DB
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -268,7 +268,7 @@ export default function CandidateOnboardingPage() {
           id: "ai-blocked",
           role: "ai",
           content:
-            "Hey — this platform is only for Tier-2/Tier-3 freshers, so we can keep opportunities fair. You're already a rockstar, and we know you'll find something great elsewhere! 🌟",
+            "Hey — this platform is only for Tier-2/Tier-3 freshers, so we can keep opportunities fair. You're already a rockstar, and we know you'll find something great elsewhere!",
         },
       ]);
       return;
@@ -286,7 +286,7 @@ export default function CandidateOnboardingPage() {
         id: "ai-resume",
         role: "ai",
         content:
-          "Nice! Now upload your resume (PDF, max 5MB) and optionally add your portfolio links.",
+          "Nice! Now upload your resume and optionally add your portfolio links.",
       },
     ]);
   }
@@ -300,7 +300,6 @@ export default function CandidateOnboardingPage() {
     setUploading(true);
     setError(null);
 
-    // 1. Upload resume to storage
     const filePath = `${user.id}/${Date.now()}-${resumeFile.name}`;
     const { error: uploadError } = await supabase.storage
       .from("resumes")
@@ -324,7 +323,6 @@ export default function CandidateOnboardingPage() {
       data: { publicUrl },
     } = supabase.storage.from("resumes").getPublicUrl(filePath);
 
-    // 2. Save resume URL and portfolio links to candidate profile
     const { error: profileError } = await supabase
       .from("candidate_profiles")
       .update({
@@ -343,7 +341,6 @@ export default function CandidateOnboardingPage() {
       return;
     }
 
-    // 3. Mark onboarding as completed
     const { error: statusError } = await supabase
       .from("profiles")
       .update({ onboarding_status: "completed" })
@@ -357,194 +354,177 @@ export default function CandidateOnboardingPage() {
 
     setUploading(false);
     setState("done");
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: "ai-done",
-        role: "ai",
-        content: "You're all set! Let's find your match 🎉",
-      },
-    ]);
-
-    // Auto-redirect after a short delay
     setTimeout(() => router.push("/jobs"), 1500);
   }
 
+  // --- Blocked screen ---
   if (state === "blocked") {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-primary-50 to-warm-50 px-4 text-center">
-        <h1 className="mb-4 text-3xl font-bold text-gray-900">
-          Thanks for stopping by!
-        </h1>
-        <p className="max-w-md text-lg text-gray-600">
-          This platform is only for Tier-2 &amp; Tier-3 freshers, so we can keep
-          opportunities fair. You&apos;re already a rockstar, and we know
-          you&apos;ll find something great elsewhere!
-        </p>
+      <div className="flex flex-col bg-[#faf7f2]" style={{ height: "calc(100vh - 56px)" }}>
+        <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
+          <div className="mx-auto max-w-sm">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+              <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#DC2626" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </div>
+            <h1 className="mb-3 font-[family-name:var(--font-fraunces)] text-2xl font-bold text-gray-900">
+              Thanks for stopping by!
+            </h1>
+            <p className="text-[0.925rem] leading-relaxed text-gray-500">
+              This platform is built for Tier-2 &amp; Tier-3 freshers to keep opportunities fair. You&apos;re already a rockstar — we know you&apos;ll find something great elsewhere!
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-primary-50 via-warm-50 to-accent-50">
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 pb-40 pt-6">
-        {state === "chat" && (
-          <ChatUI
-            messages={messages}
-            isTyping={isTyping}
-            onSelect={handleSelect}
-            selectMode={selectMode}
-            maxSelections={maxSelections}
-            options={options}
-          />
-        )}
-
-        {state !== "chat" && (
-          <>
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${
-                  msg.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
-                    msg.role === "user"
-                      ? "rounded-br-sm bg-primary-600 text-white"
-                      : "rounded-bl-sm bg-white text-gray-800"
-                  }`}
-                >
-                  {msg.content}
-                </div>
-              </div>
-            ))}
-          </>
-        )}
-
-        {/* College Search */}
-        {state === "college" && (
-          <div className="mx-auto max-w-sm space-y-2">
-            <input
-              type="text"
-              value={collegeQuery}
-              onChange={(e) => setCollegeQuery(e.target.value)}
-              placeholder="Type your college name..."
-              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-200"
-            />
-            {searchingColleges && (
-              <p className="text-sm text-gray-400">Searching...</p>
-            )}
-            {collegeResults.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => handleCollegeSelect(c)}
-                className="flex w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 text-left transition hover:bg-primary-50"
-              >
-                <span className="text-gray-800">{c.name}</span>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                    c.tier === 1
-                      ? "bg-red-100 text-red-600"
-                      : c.tier === 2
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-green-100 text-green-700"
-                  }`}
-                >
-                  Tier {c.tier}
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Resume Upload */}
-        {state === "resume" && (
-          <div className="mx-auto max-w-sm space-y-4">
-            <div>
-              <label className="mb-1 block text-sm font-medium text-gray-700">
-                Resume (PDF, max 5MB) *
-              </label>
-              <input
-                type="file"
-                accept=".pdf"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file && file.size <= 5 * 1024 * 1024) {
-                    setResumeFile(file);
-                  }
-                }}
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
-              />
+  // --- Done screen ---
+  if (state === "done") {
+    return (
+      <div className="flex flex-col bg-[#faf7f2]" style={{ height: "calc(100vh - 56px)" }}>
+        <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
+          <div className="mx-auto max-w-sm">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+              <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#16A34A" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
             </div>
-            <input
-              type="url"
-              value={githubUrl}
-              onChange={(e) => setGithubUrl(e.target.value)}
-              placeholder="GitHub URL (optional)"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-primary-500"
-            />
-            <input
-              type="url"
-              value={linkedinUrl}
-              onChange={(e) => setLinkedinUrl(e.target.value)}
-              placeholder="LinkedIn URL (optional)"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-primary-500"
-            />
-            <input
-              type="url"
-              value={portfolioUrl}
-              onChange={(e) => setPortfolioUrl(e.target.value)}
-              placeholder="Portfolio URL (optional)"
-              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none focus:border-primary-500"
-            />
+            <h1 className="mb-3 font-[family-name:var(--font-fraunces)] text-2xl font-bold text-gray-900">
+              You&apos;re all set!
+            </h1>
+            <p className="mb-6 text-[0.925rem] text-gray-500">
+              Your profile is complete. Let&apos;s find your perfect match.
+            </p>
+            <button
+              onClick={() => router.push("/jobs")}
+              className="w-full rounded-xl bg-[#BBFF3B] py-3.5 font-semibold text-gray-900 transition hover:bg-[#a8e635]"
+            >
+              Browse Jobs
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-            {/* Projects */}
-            <div>
-              <p className="mb-2 text-sm font-medium text-gray-700">
-                Projects (optional, up to 3)
+  // --- Resume form screen ---
+  if (state === "resume") {
+    return (
+      <div className="flex flex-col bg-[#faf7f2]" style={{ height: "calc(100vh - 56px)" }}>
+        <div className="flex-1 overflow-y-auto px-4 py-8">
+          <div className="mx-auto max-w-md">
+            {/* Header */}
+            <div className="mb-6 text-center">
+              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#BBFF3B]/30">
+                <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#4d7c0f" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              </div>
+              <h2 className="font-[family-name:var(--font-fraunces)] text-xl font-bold text-gray-900">
+                Almost done!
+              </h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Upload your resume and optionally add portfolio links.
               </p>
-              {projects.map((p, i) => (
-                <div key={i} className="mb-2 space-y-1">
+            </div>
+
+            {/* Resume upload */}
+            <div className="space-y-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-900/5">
+              <div>
+                <label className="mb-1.5 block text-[0.8125rem] font-semibold text-gray-700">
+                  Resume (PDF, max 5MB) <span className="text-red-500">*</span>
+                </label>
+                <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-6 transition hover:border-[#BBFF3B] hover:bg-[#BBFF3B]/5">
                   <input
-                    type="text"
-                    value={p.title}
+                    type="file"
+                    accept=".pdf"
+                    className="hidden"
                     onChange={(e) => {
-                      const np = [...projects];
-                      np[i] = { ...np[i], title: e.target.value };
-                      setProjects(np);
+                      const file = e.target.files?.[0];
+                      if (file && file.size <= 5 * 1024 * 1024) {
+                        setResumeFile(file);
+                      }
                     }}
-                    placeholder="Project title"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-primary-500"
                   />
-                  <input
-                    type="text"
-                    value={p.description}
-                    onChange={(e) => {
-                      const np = [...projects];
-                      np[i] = { ...np[i], description: e.target.value };
-                      setProjects(np);
-                    }}
-                    placeholder="Short description"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 outline-none focus:border-primary-500"
-                  />
-                </div>
-              ))}
-              {projects.length < 3 && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setProjects([...projects, { title: "", description: "" }])
-                  }
-                  className="text-sm font-medium text-primary-600 hover:underline"
-                >
-                  + Add project
-                </button>
-              )}
+                  {resumeFile ? (
+                    <span className="text-sm font-medium text-gray-800">{resumeFile.name}</span>
+                  ) : (
+                    <>
+                      <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#9CA3AF" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                      <span className="text-sm text-gray-500">Click to upload PDF</span>
+                    </>
+                  )}
+                </label>
+              </div>
+
+              <div className="space-y-3">
+                <p className="text-[0.8125rem] font-semibold text-gray-700">Links (optional)</p>
+                <input
+                  type="url"
+                  value={githubUrl}
+                  onChange={(e) => setGithubUrl(e.target.value)}
+                  placeholder="GitHub URL"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 outline-none transition focus:border-[#BBFF3B] focus:ring-2 focus:ring-[#BBFF3B]/20"
+                />
+                <input
+                  type="url"
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  placeholder="LinkedIn URL"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 outline-none transition focus:border-[#BBFF3B] focus:ring-2 focus:ring-[#BBFF3B]/20"
+                />
+                <input
+                  type="url"
+                  value={portfolioUrl}
+                  onChange={(e) => setPortfolioUrl(e.target.value)}
+                  placeholder="Portfolio URL"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 outline-none transition focus:border-[#BBFF3B] focus:ring-2 focus:ring-[#BBFF3B]/20"
+                />
+              </div>
+
+              {/* Projects */}
+              <div>
+                <p className="mb-2 text-[0.8125rem] font-semibold text-gray-700">
+                  Projects (optional, up to 3)
+                </p>
+                {projects.map((p, i) => (
+                  <div key={i} className="mb-2 flex gap-2">
+                    <input
+                      type="text"
+                      value={p.title}
+                      onChange={(e) => {
+                        const np = [...projects];
+                        np[i] = { ...np[i], title: e.target.value };
+                        setProjects(np);
+                      }}
+                      placeholder="Title"
+                      className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-[#BBFF3B]"
+                    />
+                    <input
+                      type="text"
+                      value={p.description}
+                      onChange={(e) => {
+                        const np = [...projects];
+                        np[i] = { ...np[i], description: e.target.value };
+                        setProjects(np);
+                      }}
+                      placeholder="Short description"
+                      className="flex-[2] rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-[#BBFF3B]"
+                    />
+                  </div>
+                ))}
+                {projects.length < 3 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setProjects([...projects, { title: "", description: "" }])
+                    }
+                    className="text-sm font-medium text-[#4d7c0f] hover:underline"
+                  >
+                    + Add project
+                  </button>
+                )}
+              </div>
             </div>
 
             {error && (
-              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}
               </div>
             )}
@@ -552,25 +532,107 @@ export default function CandidateOnboardingPage() {
             <button
               onClick={handleResumeSubmit}
               disabled={!resumeFile || uploading}
-              className="w-full rounded-xl bg-primary-600 py-3 font-semibold text-white transition hover:bg-primary-700 disabled:opacity-50"
+              className="mt-5 w-full rounded-xl bg-[#BBFF3B] py-3.5 font-semibold text-gray-900 transition hover:bg-[#a8e635] disabled:cursor-not-allowed disabled:opacity-40"
             >
               {uploading ? "Uploading..." : "Complete Profile"}
             </button>
           </div>
-        )}
-
-        {/* Done */}
-        {state === "done" && (
-          <div className="mx-auto max-w-sm text-center">
-            <button
-              onClick={() => router.push("/jobs")}
-              className="rounded-xl bg-primary-600 px-8 py-3 font-semibold text-white transition hover:bg-primary-700"
-            >
-              Go to Jobs
-            </button>
-          </div>
-        )}
+        </div>
       </div>
+    );
+  }
+
+  // --- Chat & College states ---
+  const hasOptions = options && options.length > 0 && !isTyping;
+  const showBottomPanel = (state === "chat" && hasOptions) || state === "college";
+
+  return (
+    <div className="flex flex-col bg-[#faf7f2]" style={{ height: "calc(100vh - 56px)" }}>
+      {/* Scrollable messages */}
+      <div className="flex-1 overflow-y-auto px-4 pt-6 pb-4">
+        <div className="mx-auto max-w-xl space-y-4">
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+            >
+              {msg.role === "ai" ? (
+                <AiMessage content={msg.content} />
+              ) : (
+                <div className="max-w-[75%] rounded-2xl rounded-br-sm bg-primary-600 px-4 py-3 text-white shadow-sm">
+                  {msg.content}
+                </div>
+              )}
+            </div>
+          ))}
+
+          {isTyping && (
+            <div className="flex justify-start">
+              <TypingIndicator />
+            </div>
+          )}
+
+          <div ref={bottomRef} />
+        </div>
+      </div>
+
+      {/* Fixed bottom panel */}
+      {showBottomPanel && (
+        <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-4 shadow-[0_-4px_24px_rgba(0,0,0,0.06)]">
+          <div className="mx-auto max-w-xl">
+            {/* Chat options */}
+            {state === "chat" && hasOptions && (
+              <PillOptions
+                options={options}
+                selectMode={selectMode}
+                maxSelections={maxSelections}
+                onSelect={handleSelect}
+              />
+            )}
+
+            {/* College search */}
+            {state === "college" && (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={collegeQuery}
+                  onChange={(e) => setCollegeQuery(e.target.value)}
+                  placeholder="Type your college name..."
+                  autoFocus
+                  className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none transition focus:border-[#BBFF3B] focus:ring-2 focus:ring-[#BBFF3B]/20"
+                />
+                {searchingColleges && (
+                  <p className="px-1 text-xs text-gray-400">Searching...</p>
+                )}
+                {collegeResults.length > 0 && (
+                  <div className="max-h-48 space-y-1 overflow-y-auto">
+                    {collegeResults.map((c) => (
+                      <button
+                        key={c.id}
+                        onClick={() => handleCollegeSelect(c)}
+                        className="flex w-full items-center justify-between rounded-lg bg-gray-50 px-4 py-2.5 text-left text-sm transition hover:bg-[#BBFF3B]/10"
+                      >
+                        <span className="text-gray-800">{c.name}</span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[0.6875rem] font-semibold ${
+                            c.tier === 1
+                              ? "bg-red-100 text-red-600"
+                              : c.tier === 2
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-green-100 text-green-700"
+                          }`}
+                        >
+                          Tier {c.tier}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

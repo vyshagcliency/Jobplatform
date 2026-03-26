@@ -25,7 +25,7 @@ interface ChatUIProps {
   options?: ChatOption[];
 }
 
-function TypingIndicator() {
+export function TypingIndicator() {
   return (
     <div className="flex items-center gap-1 rounded-2xl rounded-bl-sm bg-white px-4 py-3 shadow-sm border border-gray-100">
       <span className="h-2 w-2 animate-bounce rounded-full bg-gray-300 [animation-delay:0ms]" />
@@ -35,7 +35,7 @@ function TypingIndicator() {
   );
 }
 
-function AiMessage({ content }: { content: string }) {
+export function AiMessage({ content }: { content: string }) {
   const [displayed, setDisplayed] = useState("");
   const [done, setDone] = useState(false);
 
@@ -62,7 +62,7 @@ function AiMessage({ content }: { content: string }) {
   );
 }
 
-function PillOptions({
+export function PillOptions({
   options,
   selectMode,
   maxSelections,
