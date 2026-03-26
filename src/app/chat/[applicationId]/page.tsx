@@ -119,16 +119,28 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const [sendError, setSendError] = useState("");
+
   async function handleSend() {
     if (!newMessage.trim() || sending || !canSend) return;
 
     setSending(true);
-    await supabase.from("messages").insert({
+    setSendError("");
+    const msgContent = newMessage.trim();
+
+    const { error } = await supabase.from("messages").insert({
       sender_id: userId,
       receiver_id: otherUserId,
       application_id: applicationId,
-      content: newMessage.trim(),
+      content: msgContent,
     });
+
+    if (error) {
+      setSendError("Failed to send message. Please try again.");
+      setSending(false);
+      return;
+    }
+
     setNewMessage("");
     setSending(false);
   }
@@ -170,6 +182,11 @@ export default function ChatPage() {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 border-t border-gray-200 bg-white p-4">
+        {sendError && (
+          <div className="mx-auto mb-2 max-w-3xl rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">
+            {sendError}
+          </div>
+        )}
         {canSend ? (
           <div className="mx-auto flex max-w-3xl gap-3">
             <input

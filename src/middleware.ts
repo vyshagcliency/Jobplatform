@@ -27,9 +27,11 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
+          cookiesToSet.forEach(({ name, value }) => {
             request.cookies.set(name, value);
-            supabaseResponse = NextResponse.next({ request });
+          });
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) => {
             supabaseResponse.cookies.set(name, value, options);
           });
         },
@@ -48,30 +50,36 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check profile status
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("onboarding_status, eligibility, role")
     .eq("id", user.id)
     .single();
 
-  if (profile) {
-    if (profile.eligibility === "ineligible") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/blocked";
-      return NextResponse.redirect(url);
-    }
+  // If profile fetch fails or doesn't exist, redirect to onboarding
+  // (prevents bypassing onboarding due to RLS/network errors)
+  if (profileError || !profile) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/onboarding/candidate";
+    return NextResponse.redirect(url);
+  }
 
-    if (
-      profile.onboarding_status === "pending" ||
-      profile.onboarding_status === "in_progress"
-    ) {
-      const url = request.nextUrl.clone();
-      url.pathname =
-        profile.role === "employer"
-          ? "/onboarding/employer"
-          : "/onboarding/candidate";
-      return NextResponse.redirect(url);
-    }
+  if (profile.eligibility === "ineligible") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/blocked";
+    return NextResponse.redirect(url);
+  }
+
+  if (
+    profile.onboarding_status === "pending" ||
+    profile.onboarding_status === "in_progress"
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname =
+      profile.role === "employer"
+        ? "/onboarding/employer"
+        : "/onboarding/candidate";
+    return NextResponse.redirect(url);
   }
 
   return supabaseResponse;

@@ -265,7 +265,7 @@ export default function PostJobPage() {
               />
               {compensation === 0 && (
                 <p className="mt-1 text-xs text-red-500">
-                  Unpaid roles are not allowed on Underdog Jobs.
+                  Unpaid roles are not allowed on Culture Hires.
                 </p>
               )}
             </div>

@@ -76,6 +76,12 @@ export default function CompanyProfilePage() {
       return;
     }
 
+    // Mark onboarding as completed now that company profile is set up
+    await supabase
+      .from("profiles")
+      .update({ onboarding_status: "completed" })
+      .eq("id", user.id);
+
     router.push("/dashboard/employer");
   }
 
@@ -109,8 +115,16 @@ export default function CompanyProfilePage() {
             </label>
             <input
               type="file"
-              accept="image/*"
-              onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)}
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file && file.size > 2 * 1024 * 1024) {
+                  setError("Logo must be under 2MB.");
+                  return;
+                }
+                setError("");
+                setLogoFile(file ?? null);
+              }}
               className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700"
             />
           </div>

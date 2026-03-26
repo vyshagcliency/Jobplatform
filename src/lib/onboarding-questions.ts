@@ -225,7 +225,7 @@ export const employerSections: OnboardingSection[] = [
     id: 8,
     field: "compensation_type",
     message:
-      "How do you compensate? (Quick note: unpaid roles aren't allowed on Underdog!)",
+      "How do you compensate? (Quick note: unpaid roles aren't allowed on Culture Hires!)",
     options: [
       { label: "Monthly stipend", value: "stipend" },
       { label: "CTC package", value: "ctc" },

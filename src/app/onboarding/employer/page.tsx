@@ -21,14 +21,14 @@ export default function EmployerOnboardingPage() {
   const loadSection = useCallback(
     async (sectionIndex: number) => {
       if (sectionIndex >= employerSections.length) {
-        // Onboarding complete
+        // Questions done — mark in_progress (completed after company profile setup)
         const {
           data: { user },
         } = await supabase.auth.getUser();
         if (user) {
           await supabase
             .from("profiles")
-            .update({ onboarding_status: "completed" })
+            .update({ onboarding_status: "in_progress" })
             .eq("id", user.id);
         }
         setMessages((prev) => [

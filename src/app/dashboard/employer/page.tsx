@@ -154,11 +154,8 @@ export default function EmployerDashboard() {
   }, [supabase]);
 
   async function handleStatusChange(appId: string, newStatus: string) {
-    await supabase
-      .from("applications")
-      .update({ status: newStatus, updated_at: new Date().toISOString() })
-      .eq("id", appId);
-
+    const prevGroups = groups;
+    // Optimistic update
     setGroups((prev) =>
       prev.map((g) => ({
         ...g,
@@ -167,6 +164,16 @@ export default function EmployerDashboard() {
         ),
       }))
     );
+
+    const { error } = await supabase
+      .from("applications")
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq("id", appId);
+
+    if (error) {
+      // Revert on failure
+      setGroups(prevGroups);
+    }
   }
 
   const totalApplicants = groups.reduce((sum, g) => sum + g.applicants.length, 0);

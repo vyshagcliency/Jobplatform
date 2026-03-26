@@ -39,13 +39,21 @@ export async function GET(request: Request) {
         .eq("id", data.user.id)
         .single();
 
-      if (profile?.eligibility === "ineligible") {
+      // If no profile exists yet (trigger may be delayed), redirect to onboarding
+      if (!profile) {
+        const fallbackRole = roleParam || "candidate";
+        return NextResponse.redirect(
+          `${origin}/onboarding/${fallbackRole}`
+        );
+      }
+
+      if (profile.eligibility === "ineligible") {
         return NextResponse.redirect(`${origin}/blocked`);
       }
 
       if (
-        profile?.onboarding_status === "pending" ||
-        profile?.onboarding_status === "in_progress"
+        profile.onboarding_status === "pending" ||
+        profile.onboarding_status === "in_progress"
       ) {
         const dest =
           profile.role === "employer"
@@ -55,7 +63,7 @@ export async function GET(request: Request) {
       }
 
       const dest =
-        profile?.role === "employer" ? "/dashboard/employer" : "/jobs";
+        profile.role === "employer" ? "/dashboard/employer" : "/jobs";
       return NextResponse.redirect(`${origin}${dest}`);
     }
   }

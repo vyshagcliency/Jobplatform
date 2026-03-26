@@ -42,6 +42,7 @@ export default function JobDetailPage() {
   const [hasResume, setHasResume] = useState(false);
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [applyError, setApplyError] = useState("");
 
   useEffect(() => {
     async function load() {
@@ -62,15 +63,15 @@ export default function JobDetailPage() {
           .select("id")
           .eq("candidate_id", user.id)
           .eq("job_id", jobId)
-          .single();
-        if (app) setApplied(true);
+          .maybeSingle();
+        setApplied(!!app);
 
         const { data: profile } = await supabase
           .from("candidate_profiles")
           .select("resume_url")
           .eq("user_id", user.id)
           .single();
-        if (profile?.resume_url) setHasResume(true);
+        setHasResume(!!profile?.resume_url);
       }
     }
     load();
@@ -83,6 +84,7 @@ export default function JobDetailPage() {
     }
 
     setApplying(true);
+    setApplyError("");
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -90,7 +92,12 @@ export default function JobDetailPage() {
 
     if (resumeFile) {
       const filePath = `${user.id}/${Date.now()}-${resumeFile.name}`;
-      await supabase.storage.from("resumes").upload(filePath, resumeFile);
+      const { error: uploadError } = await supabase.storage.from("resumes").upload(filePath, resumeFile);
+      if (uploadError) {
+        setApplyError(`Resume upload failed: ${uploadError.message}`);
+        setApplying(false);
+        return;
+      }
       const {
         data: { publicUrl },
       } = supabase.storage.from("resumes").getPublicUrl(filePath);
@@ -100,11 +107,17 @@ export default function JobDetailPage() {
         .eq("user_id", user.id);
     }
 
-    await supabase.from("applications").insert({
+    const { error: insertError } = await supabase.from("applications").insert({
       candidate_id: user.id,
       job_id: jobId,
       status: "applied",
     });
+
+    if (insertError) {
+      setApplyError(insertError.message.includes("duplicate") ? "You have already applied to this job." : `Application failed: ${insertError.message}`);
+      setApplying(false);
+      return;
+    }
 
     setApplied(true);
     setApplying(false);
@@ -265,6 +278,12 @@ export default function JobDetailPage() {
                       Upload & Apply
                     </button>
                   )}
+                </div>
+              )}
+
+              {applyError && (
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {applyError}
                 </div>
               )}
 
