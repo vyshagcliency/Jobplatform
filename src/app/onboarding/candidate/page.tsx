@@ -35,6 +35,7 @@ export default function CandidateOnboardingPage() {
   const [portfolioUrl, setPortfolioUrl] = useState("");
   const [projects, setProjects] = useState<{ title: string; description: string }[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const loadSection = useCallback(
     async (sectionIndex: number) => {
@@ -122,11 +123,25 @@ export default function CandidateOnboardingPage() {
 
           if (profile.college_id) {
             if (profile.resume_url) {
+              // Ensure onboarding_status is marked completed (fixes redirect loop
+              // when resume_url was saved but profiles update failed previously)
+              await supabase
+                .from("profiles")
+                .update({ onboarding_status: "completed" })
+                .eq("id", user.id);
               setState("done");
               router.push("/jobs");
               return;
             }
             setState("resume");
+            setMessages([
+              {
+                id: "ai-resume",
+                role: "ai",
+                content:
+                  "Upload your resume (PDF, max 5MB) and optionally add your portfolio links.",
+              },
+            ]);
             return;
           }
 
@@ -283,7 +298,9 @@ export default function CandidateOnboardingPage() {
     if (!user || !resumeFile) return;
 
     setUploading(true);
+    setError(null);
 
+    // 1. Upload resume to storage
     const filePath = `${user.id}/${Date.now()}-${resumeFile.name}`;
     const { error: uploadError } = await supabase.storage
       .from("resumes")
@@ -291,6 +308,15 @@ export default function CandidateOnboardingPage() {
 
     if (uploadError) {
       setUploading(false);
+      setError(
+        uploadError.message.includes("Bucket not found") ||
+          uploadError.message.includes("not found")
+          ? "Resume storage is not configured. Please contact support."
+          : uploadError.message.includes("security") ||
+            uploadError.message.includes("policy")
+          ? "Upload permission denied. Please contact support."
+          : `Upload failed: ${uploadError.message}`
+      );
       return;
     }
 
@@ -298,7 +324,8 @@ export default function CandidateOnboardingPage() {
       data: { publicUrl },
     } = supabase.storage.from("resumes").getPublicUrl(filePath);
 
-    await supabase
+    // 2. Save resume URL and portfolio links to candidate profile
+    const { error: profileError } = await supabase
       .from("candidate_profiles")
       .update({
         resume_url: publicUrl,
@@ -310,10 +337,23 @@ export default function CandidateOnboardingPage() {
       })
       .eq("user_id", user.id);
 
-    await supabase
+    if (profileError) {
+      setUploading(false);
+      setError(`Failed to save profile: ${profileError.message}`);
+      return;
+    }
+
+    // 3. Mark onboarding as completed
+    const { error: statusError } = await supabase
       .from("profiles")
       .update({ onboarding_status: "completed" })
       .eq("id", user.id);
+
+    if (statusError) {
+      setUploading(false);
+      setError(`Failed to complete profile: ${statusError.message}`);
+      return;
+    }
 
     setUploading(false);
     setState("done");
@@ -325,6 +365,9 @@ export default function CandidateOnboardingPage() {
         content: "You're all set! Let's find your match 🎉",
       },
     ]);
+
+    // Auto-redirect after a short delay
+    setTimeout(() => router.push("/jobs"), 1500);
   }
 
   if (state === "blocked") {
@@ -499,6 +542,12 @@ export default function CandidateOnboardingPage() {
                 </button>
               )}
             </div>
+
+            {error && (
+              <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
 
             <button
               onClick={handleResumeSubmit}
