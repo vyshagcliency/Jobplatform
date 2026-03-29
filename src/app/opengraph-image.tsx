@@ -19,19 +19,6 @@ export default function OpenGraphImage() {
           fontFamily: "sans-serif",
         }}
       >
-        {/* Background accent */}
-        <div
-          style={{
-            position: "absolute",
-            top: "-80px",
-            right: "-40px",
-            width: "500px",
-            height: "400px",
-            background:
-              "radial-gradient(ellipse at center, rgba(255,92,44,0.1) 0%, transparent 65%)",
-          }}
-        />
-
         {/* Logo + Brand */}
         <div
           style={{
@@ -52,41 +39,35 @@ export default function OpenGraphImage() {
               justifyContent: "center",
             }}
           >
-            <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-              <path
-                d="M15 22 L15 8"
-                stroke="#0C0E13"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-              <path
-                d="M10 13.5 L15 8 L20 13.5"
-                stroke="#0C0E13"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M11 20 L19 20"
-                stroke="#0C0E13"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              />
-            </svg>
+            <div
+              style={{
+                width: "30px",
+                height: "30px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "24px",
+                fontWeight: 900,
+                color: "#0C0E13",
+              }}
+            >
+              ↑
+            </div>
           </div>
-          <span
+          <div
             style={{
               fontSize: "28px",
               fontWeight: 700,
               color: "#1C1917",
               letterSpacing: "-0.02em",
+              display: "flex",
             }}
           >
             Culture Hires
-          </span>
+          </div>
         </div>
 
-        {/* Headline */}
+        {/* Headline line 1 */}
         <div
           style={{
             fontSize: "56px",
@@ -95,13 +76,26 @@ export default function OpenGraphImage() {
             textAlign: "center",
             lineHeight: 1.15,
             letterSpacing: "-0.03em",
-            maxWidth: "800px",
-            marginBottom: "20px",
+            display: "flex",
           }}
         >
           Your talent matters,
-          <br />
-          <span style={{ color: "#FF5C2C" }}>not your college tag.</span>
+        </div>
+
+        {/* Headline line 2 */}
+        <div
+          style={{
+            fontSize: "56px",
+            fontWeight: 800,
+            color: "#FF5C2C",
+            textAlign: "center",
+            lineHeight: 1.15,
+            letterSpacing: "-0.03em",
+            marginBottom: "20px",
+            display: "flex",
+          }}
+        >
+          not your college tag.
         </div>
 
         {/* Sub */}
@@ -112,10 +106,10 @@ export default function OpenGraphImage() {
             textAlign: "center",
             maxWidth: "560px",
             lineHeight: 1.5,
+            display: "flex",
           }}
         >
-          Fair hiring for every fresher. No unpaid roles. No bias. Pure
-          meritocracy.
+          Fair hiring for every fresher. No unpaid roles. No bias. Pure meritocracy.
         </div>
       </div>
     ),
