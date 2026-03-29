@@ -268,7 +268,7 @@ export default function CandidateOnboardingPage() {
           id: "ai-blocked",
           role: "ai",
           content:
-            "Hey — this platform is only for Tier-2/Tier-3 freshers, so we can keep opportunities fair. You're already a rockstar, and we know you'll find something great elsewhere!",
+            "Hey — this platform keeps IIT, NIT, and other elite-college listings separate so every other fresher gets a fair shot. You're already a rockstar, and we know you'll find something great elsewhere!",
         },
       ]);
       return;
@@ -359,19 +359,95 @@ export default function CandidateOnboardingPage() {
 
   // --- Blocked screen ---
   if (state === "blocked") {
+    async function handleBlockedGoHome() {
+      await supabase.auth.signOut();
+      router.push("/");
+    }
+
     return (
-      <div className="flex flex-col bg-[#faf7f2]" style={{ height: "calc(100vh - 56px)" }}>
-        <div className="flex flex-1 flex-col items-center justify-center px-4 text-center">
-          <div className="mx-auto max-w-sm">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-              <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#DC2626" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+      <div
+        style={{
+          height: "calc(100vh - 56px)",
+          display: "flex",
+          flexDirection: "column",
+          backgroundColor: "#faf7f2",
+        }}
+      >
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1rem 1.5rem",
+            textAlign: "center",
+          }}
+        >
+          <div style={{ maxWidth: "400px" }}>
+            <div
+              style={{
+                width: "64px",
+                height: "64px",
+                borderRadius: "50%",
+                backgroundColor: "#FEF0EB",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 1.5rem",
+              }}
+            >
+              <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#FF5C2C" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </div>
-            <h1 className="mb-3 font-[family-name:var(--font-fraunces)] text-2xl font-bold text-gray-900">
+            <h1
+              style={{
+                fontFamily: "var(--font-display), sans-serif",
+                fontSize: "1.5rem",
+                fontWeight: 800,
+                color: "#1C1917",
+                marginBottom: "0.75rem",
+              }}
+            >
               Thanks for stopping by!
             </h1>
-            <p className="text-[0.925rem] leading-relaxed text-gray-500">
-              This platform is built for Tier-2 &amp; Tier-3 freshers to keep opportunities fair. You&apos;re already a rockstar — we know you&apos;ll find something great elsewhere!
+            <p
+              style={{
+                fontFamily: "var(--font-sans), sans-serif",
+                fontSize: "0.925rem",
+                lineHeight: 1.6,
+                color: "#78716C",
+                marginBottom: "1.75rem",
+              }}
+            >
+              This platform keeps IIT, NIT, and other elite-college listings
+              separate — so every other fresher gets a fair shot. You&apos;re
+              already a rockstar — we know you&apos;ll find something great
+              elsewhere!
             </p>
+            <button
+              onClick={handleBlockedGoHome}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "0.4rem",
+                backgroundColor: "#FF5C2C",
+                color: "#ffffff",
+                fontFamily: "var(--font-sans), sans-serif",
+                fontWeight: 700,
+                fontSize: "0.9rem",
+                padding: "0.8rem 1.6rem",
+                borderRadius: "7px",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Go Home
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
           </div>
         </div>
       </div>

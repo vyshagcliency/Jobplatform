@@ -139,7 +139,7 @@ function SignupForm() {
         </div>
 
         <p style={{ fontFamily: F.body, fontSize: "0.78rem", color: "#9C9C94" }}>
-          Built for Tier-2 &amp; Tier-3 freshers
+          No elite-college gatekeeping. Fair hiring only.
         </p>
       </div>
 

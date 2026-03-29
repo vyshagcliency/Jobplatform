@@ -203,7 +203,7 @@ export default function Home() {
                   textTransform: "uppercase",
                 }}
               >
-                For Tier-2 &amp; Tier-3 Freshers
+                No Elite-College Gatekeeping
               </span>
             </div>
 
@@ -384,7 +384,7 @@ export default function Home() {
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
           {[
-            { num: "01", title: "Tier-2 & Tier-3 Only",   desc: "No IIT/NIT gatekeeping — built for students from non-elite colleges. This space is yours." },
+            { num: "01", title: "No IIT/NIT Gatekeeping",  desc: "Elite colleges have their own pipelines. This space is built for everyone else — and it's yours." },
             { num: "02", title: "No Unpaid Roles",         desc: "Every listing on Culture Hires pays. Your time and skills deserve real compensation, period." },
             { num: "03", title: "AI Culture Matching",     desc: "Our AI figures out what makes you tick — then connects you with companies that actually fit." },
           ].map((f, i) => (

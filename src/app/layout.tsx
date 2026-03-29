@@ -18,9 +18,26 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Culture Hires — Fair Hiring for Tier-2 & Tier-3 Freshers",
+  title: {
+    default: "Culture Hires — Fair Hiring for Every Fresher",
+    template: "%s | Culture Hires",
+  },
   description:
     "A hiring platform for non-elite college freshers with AI matching, paid-only jobs, and direct employer connections.",
+  metadataBase: new URL("https://www.culturehires.com"),
+  openGraph: {
+    title: "Culture Hires — Fair Hiring for Every Fresher",
+    description:
+      "Your talent matters, not your college tag. No unpaid roles. No bias. Pure meritocracy.",
+    siteName: "Culture Hires",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Culture Hires — Fair Hiring for Every Fresher",
+    description:
+      "Your talent matters, not your college tag. No unpaid roles. No bias. Pure meritocracy.",
+  },
 };
 
 export default function RootLayout({
