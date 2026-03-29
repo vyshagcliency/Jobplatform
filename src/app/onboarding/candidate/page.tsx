@@ -37,6 +37,7 @@ export default function CandidateOnboardingPage() {
   const [projects, setProjects] = useState<{ title: string; description: string }[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -101,6 +102,23 @@ export default function CandidateOnboardingPage() {
         return;
       }
 
+      // If onboarding is already completed, redirect immediately
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("onboarding_status, eligibility")
+        .eq("id", user.id)
+        .single();
+
+      if (userProfile?.onboarding_status === "completed") {
+        router.replace("/jobs");
+        return;
+      }
+
+      if (userProfile?.eligibility === "ineligible") {
+        router.replace("/blocked");
+        return;
+      }
+
       const { data: profile } = await supabase
         .from("candidate_profiles")
         .select("*")
@@ -131,8 +149,7 @@ export default function CandidateOnboardingPage() {
                 .from("profiles")
                 .update({ onboarding_status: "completed" })
                 .eq("id", user.id);
-              setState("done");
-              router.push("/jobs");
+              router.replace("/jobs");
               return;
             }
             setState("resume");
@@ -144,6 +161,7 @@ export default function CandidateOnboardingPage() {
                   "Upload your resume (PDF, max 5MB) and optionally add your portfolio links.",
               },
             ]);
+            setInitialLoading(false);
             return;
           }
 
@@ -156,10 +174,12 @@ export default function CandidateOnboardingPage() {
                 content: "Almost there! Which college are you from? Type to search...",
               },
             ]);
+            setInitialLoading(false);
             return;
           }
         }
 
+        setInitialLoading(false);
         loadSection(resumeSection);
       } else {
         await supabase.from("candidate_profiles").insert({
@@ -169,6 +189,7 @@ export default function CandidateOnboardingPage() {
           .from("profiles")
           .update({ onboarding_status: "in_progress" })
           .eq("id", user.id);
+        setInitialLoading(false);
         loadSection(0);
       }
     }
@@ -355,6 +376,31 @@ export default function CandidateOnboardingPage() {
     setUploading(false);
     setState("done");
     setTimeout(() => router.push("/jobs"), 1500);
+  }
+
+  // --- Loading gate (prevents flash while checking auth/onboarding status) ---
+  if (initialLoading) {
+    return (
+      <div
+        style={{
+          height: "calc(100vh - 56px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#faf7f2",
+        }}
+      >
+        <div
+          style={{
+            fontFamily: "var(--font-sans), sans-serif",
+            fontSize: "0.875rem",
+            color: "#78716C",
+          }}
+        >
+          Loading...
+        </div>
+      </div>
+    );
   }
 
   // --- Blocked screen ---

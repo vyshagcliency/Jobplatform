@@ -87,6 +87,18 @@ export default function EmployerOnboardingPage() {
         return;
       }
 
+      // If onboarding is already completed, redirect immediately
+      const { data: userProfile } = await supabase
+        .from("profiles")
+        .select("onboarding_status")
+        .eq("id", user.id)
+        .single();
+
+      if (userProfile?.onboarding_status === "completed") {
+        router.replace("/dashboard/employer");
+        return;
+      }
+
       const { data: profile } = await supabase
         .from("employer_profiles")
         .select("*")
