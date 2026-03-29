@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -17,6 +17,35 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Redirect already-authenticated users to their dashboard
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from("profiles")
+        .select("role, onboarding_status, eligibility")
+        .eq("id", user.id)
+        .single()
+        .then(({ data: profile }) => {
+          if (!profile) return;
+          if (profile.eligibility === "ineligible") {
+            router.replace("/blocked");
+          } else if (profile.onboarding_status !== "completed") {
+            router.replace(
+              profile.role === "employer"
+                ? "/onboarding/employer"
+                : "/onboarding/candidate"
+            );
+          } else {
+            router.replace(
+              profile.role === "employer" ? "/dashboard/employer" : "/jobs"
+            );
+          }
+        });
+    });
+  }, [router]);
 
   async function handleGoogleLogin() {
     setError("");
