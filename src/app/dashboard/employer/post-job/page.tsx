@@ -16,10 +16,10 @@ export default function PostJobPage() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [roleType, setRoleType] = useState<"internship" | "full_time" | "freelance">("internship");
+  const [roleType, setRoleType] = useState<"internship" | "full_time" | "freelance" | "">("");
   const [compensation, setCompensation] = useState<number | "">("");
   const [location, setLocation] = useState("");
-  const [workStyle, setWorkStyle] = useState<"remote" | "in_office" | "hybrid">("remote");
+  const [workStyle, setWorkStyle] = useState<"remote" | "in_office" | "hybrid" | "">("");
   const [skillTags, setSkillTags] = useState<string[]>([]);
   const [deadline, setDeadline] = useState("");
   const [allSkills, setAllSkills] = useState<string[]>([]);
@@ -35,7 +35,7 @@ export default function PostJobPage() {
       });
   }, [supabase]);
 
-  const isCompValid = typeof compensation === "number" && compensation > 0;
+  const isCompValid = compensation === "" || (typeof compensation === "number" && compensation > 0);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,7 +43,10 @@ export default function PostJobPage() {
       setError("Select at least 1 skill tag.");
       return;
     }
-    if (!isCompValid) return;
+    if (!isCompValid) {
+      setError("Compensation must be greater than 0.");
+      return;
+    }
     if (isExternal && !externalUrl) {
       setError("External apply URL is required.");
       return;
@@ -95,10 +98,10 @@ export default function PostJobPage() {
       employer_id: user.id,
       title,
       description,
-      role_type: roleType,
-      compensation,
-      location,
-      work_style: workStyle,
+      role_type: roleType || null,
+      compensation: compensation === "" ? null : compensation,
+      location: location || null,
+      work_style: workStyle || null,
       skill_tags: skillTags,
       deadline: deadline || null,
       status: "active",
@@ -243,6 +246,7 @@ export default function PostJobPage() {
                 onChange={(e) => setRoleType(e.target.value as typeof roleType)}
                 className={inputClass}
               >
+                <option value="">Select role type</option>
                 <option value="internship">Internship</option>
                 <option value="full_time">Full-time</option>
                 <option value="freelance">Freelance</option>
@@ -251,12 +255,11 @@ export default function PostJobPage() {
 
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
-                Compensation (INR) *
+                Compensation (INR)
               </label>
               <input
                 type="number"
                 min={1}
-                required
                 value={compensation}
                 onChange={(e) =>
                   setCompensation(e.target.value ? Number(e.target.value) : "")
@@ -289,6 +292,7 @@ export default function PostJobPage() {
                 onChange={(e) => setWorkStyle(e.target.value as typeof workStyle)}
                 className={inputClass}
               >
+                <option value="">Select work style</option>
                 <option value="remote">Remote</option>
                 <option value="in_office">In-office</option>
                 <option value="hybrid">Hybrid</option>
@@ -345,8 +349,7 @@ export default function PostJobPage() {
 
           <button
             type="submit"
-            disabled={!isCompValid || loading}
-            title={!isCompValid ? "Why we don't allow unpaid roles" : undefined}
+            disabled={loading}
             className="w-full rounded-lg bg-primary-600 py-3 text-lg font-semibold text-white transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Publishing..." : "Publish Job"}

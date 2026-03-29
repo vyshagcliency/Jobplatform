@@ -7,10 +7,10 @@ import { createClient } from "@/lib/supabase/client";
 interface Job {
   id: string;
   title: string;
-  role_type: string;
-  compensation: number;
-  location: string;
-  work_style: string;
+  role_type: string | null;
+  compensation: number | null;
+  location: string | null;
+  work_style: string | null;
   skill_tags: string[];
   created_at: string;
   companies: { name: string; logo_url: string | null };
@@ -367,8 +367,8 @@ export default function JobsPage() {
         {!loading && displayJobs.length > 0 && (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "0.875rem" }}>
             {displayJobs.map((job) => {
-              const rc = roleColors[job.role_type] ?? { bg: "#F3F4F6", text: "#4B5563" };
-              const sc = styleColors[job.work_style] ?? { bg: "#F3F4F6", text: "#4B5563" };
+              const rc = job.role_type ? (roleColors[job.role_type] ?? { bg: "#F3F4F6", text: "#4B5563" }) : { bg: "#F3F4F6", text: "#4B5563" };
+              const sc = job.work_style ? (styleColors[job.work_style] ?? { bg: "#F3F4F6", text: "#4B5563" }) : { bg: "#F3F4F6", text: "#4B5563" };
               const isMock = job.id.startsWith("mock-");
               const isExternal = !!job.external_url;
               const displayName = job.source_company_name || job.companies?.name || "?";
@@ -419,7 +419,9 @@ export default function JobsPage() {
                   </h3>
 
                   {/* Tags */}
+                  {(job.role_type || job.work_style) && (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem", marginBottom: "0.875rem" }}>
+                    {job.role_type && (
                     <span style={{
                       fontFamily: "var(--font-sans)", fontSize: "0.7rem", fontWeight: 600,
                       padding: "0.2rem 0.6rem", borderRadius: "999px",
@@ -427,6 +429,8 @@ export default function JobsPage() {
                     }}>
                       {roleTypeLabels[job.role_type] ?? job.role_type}
                     </span>
+                    )}
+                    {job.work_style && (
                     <span style={{
                       fontFamily: "var(--font-sans)", fontSize: "0.7rem", fontWeight: 600,
                       padding: "0.2rem 0.6rem", borderRadius: "999px",
@@ -434,7 +438,9 @@ export default function JobsPage() {
                     }}>
                       {workStyleLabels[job.work_style] ?? job.work_style}
                     </span>
+                    )}
                   </div>
+                  )}
 
                   {/* Skills */}
                   {job.skill_tags?.length > 0 && (
@@ -462,6 +468,7 @@ export default function JobsPage() {
 
                   {/* Bottom row */}
                   <div style={{ marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                    {job.compensation != null ? (
                     <p style={{
                       fontFamily: "var(--font-display)", fontSize: "1.1rem", fontWeight: 700,
                       color: "#1C1917", letterSpacing: "-0.01em",
@@ -472,12 +479,22 @@ export default function JobsPage() {
                         fontWeight: 400, color: "#A8A29E", marginLeft: "0.2rem",
                       }}>/mo</span>
                     </p>
+                    ) : (
+                    <p style={{
+                      fontFamily: "var(--font-sans)", fontSize: "0.82rem",
+                      color: "#A8A29E",
+                    }}>
+                      Compensation not listed
+                    </p>
+                    )}
+                    {job.location && (
                     <p style={{
                       fontFamily: "var(--font-sans)", fontSize: "0.78rem",
                       color: "#78716C",
                     }}>
                       {job.location}
                     </p>
+                    )}
                   </div>
                 </>
               );

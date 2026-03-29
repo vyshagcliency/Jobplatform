@@ -17,10 +17,10 @@ interface JobDetail {
   id: string;
   title: string;
   description: string;
-  role_type: string;
-  compensation: number;
-  location: string;
-  work_style: string;
+  role_type: string | null;
+  compensation: number | null;
+  location: string | null;
+  work_style: string | null;
   skill_tags: string[];
   deadline: string;
   companies: { name: string; logo_url: string | null; vibe_description: string | null };
@@ -174,15 +174,21 @@ export default function JobDetailPage() {
           </div>
 
           <div className="mb-6 flex flex-wrap gap-2">
+            {job.role_type && (
             <span className="rounded-full bg-primary-100 px-3 py-1 text-sm font-medium text-primary-700">
               {job.role_type === "full_time" ? "Full-time" : job.role_type === "internship" ? "Internship" : "Freelance"}
             </span>
+            )}
+            {job.work_style && (
             <span className="rounded-full bg-accent-100 px-3 py-1 text-sm font-medium text-accent-700">
               {job.work_style === "in_office" ? "In-office" : job.work_style === "remote" ? "Remote" : "Hybrid"}
             </span>
+            )}
+            {job.compensation != null && (
             <span className="rounded-full bg-warm-100 px-3 py-1 text-sm font-medium text-warm-700">
               ₹{job.compensation.toLocaleString("en-IN")}
             </span>
+            )}
           </div>
 
           <div className="mb-6 grid gap-4 text-sm sm:grid-cols-2">
