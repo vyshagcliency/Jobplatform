@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
 const industries = [
@@ -20,7 +19,6 @@ const industries = [
 ];
 
 export default function CompanyProfilePage() {
-  const router = useRouter();
   const supabase = createClient();
 
   const [name, setName] = useState("");
@@ -82,7 +80,9 @@ export default function CompanyProfilePage() {
       .update({ onboarding_status: "completed" })
       .eq("id", user.id);
 
-    router.push("/dashboard/employer");
+    // Hard navigation — soft router.push can race with middleware/RSC fetch
+    // and leave the user on a blank screen until they reload.
+    window.location.href = "/dashboard/employer";
   }
 
   return (
