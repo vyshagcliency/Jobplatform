@@ -6,12 +6,16 @@ const publicRoutes = ["/", "/signup", "/verify-otp", "/blocked", "/login"];
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public routes and onboarding
+  // Allow public routes and onboarding.
+  // /auth/* MUST be excluded — the OAuth callback runs there before the
+  // user has a session cookie, so the auth check below would otherwise
+  // bounce it to /login and the route handler would never execute.
   if (
     publicRoutes.some((r) => pathname === r) ||
     pathname.startsWith("/onboarding") ||
     pathname.startsWith("/api/") ||
-    pathname.startsWith("/_next/")
+    pathname.startsWith("/_next/") ||
+    pathname.startsWith("/auth/")
   ) {
     return NextResponse.next();
   }

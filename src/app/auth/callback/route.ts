@@ -18,20 +18,25 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.user) {
-      // The trigger that creates `profiles` defaults role to 'candidate' when
-      // raw_user_meta_data.role is missing — which is always the case for
-      // OAuth signups (we can't pass user metadata through signInWithOAuth).
-      // For email/password signups we DO set role in raw_user_meta_data, so
-      // those are always trustworthy.
-      const metadataRole = data.user.user_metadata?.role as
-        | "candidate"
-        | "employer"
-        | undefined;
-      const intendedRole =
-        metadataRole ??
-        (roleParam === "employer" || roleParam === "candidate"
-          ? roleParam
-          : undefined);
+      // Detect whether this auth came from an OAuth provider (Google etc.)
+      // or from email/password. We trust user_metadata.role only for email
+      // signups — for OAuth, the only reliable signal is the cookie we set
+      // right before signInWithOAuth (user_metadata can be stale from a
+      // previous email signup attempt with the same address).
+      const provider = data.user.app_metadata?.provider;
+      const isOAuthSignup = provider !== undefined && provider !== "email";
+
+      let intendedRole: "candidate" | "employer" | undefined;
+      if (isOAuthSignup) {
+        if (roleParam === "employer" || roleParam === "candidate") {
+          intendedRole = roleParam;
+        }
+      } else {
+        const metaRole = data.user.user_metadata?.role;
+        if (metaRole === "employer" || metaRole === "candidate") {
+          intendedRole = metaRole;
+        }
+      }
 
       if (intendedRole) {
         await supabase
