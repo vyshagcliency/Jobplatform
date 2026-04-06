@@ -68,11 +68,19 @@ function SignupForm() {
   async function handleGoogleSignup() {
     setError("");
     setGoogleLoading(true);
+
+    // Stash the intended role in a short-lived cookie. We can't pass it via
+    // the OAuth redirectTo query string because Supabase's redirect URL
+    // allowlist rejects unknown query params and falls back to the Site URL,
+    // which lands users on the home page instead of /auth/callback.
+    const isSecure = window.location.protocol === "https:";
+    document.cookie = `pending_oauth_role=${role}; path=/; max-age=600; samesite=lax${isSecure ? "; secure" : ""}`;
+
     const supabase = createClient();
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?role=${role}`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
     if (oauthError) {

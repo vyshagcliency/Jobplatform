@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const roleParam = searchParams.get("role");
+
+  // The signup page sets `pending_oauth_role` before triggering OAuth so we
+  // can recover the intended role here. Fall back to the legacy ?role= query
+  // param for any in-flight requests started before this change shipped.
+  const cookieStore = await cookies();
+  const cookieRole = cookieStore.get("pending_oauth_role")?.value;
+  const roleParam = cookieRole ?? searchParams.get("role");
 
   if (code) {
     const supabase = await createClient();
@@ -18,6 +25,11 @@ export async function GET(request: Request) {
           .from("profiles")
           .update({ role: roleParam })
           .eq("id", data.user.id);
+      }
+
+      // Clear the cookie now that we've consumed it.
+      if (cookieRole) {
+        cookieStore.set("pending_oauth_role", "", { path: "/", maxAge: 0 });
       }
 
       // Also sync full_name from Google if the profile name is empty
