@@ -18,12 +18,25 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.user) {
-      // For Google OAuth signups, the trigger defaults role to 'candidate'.
-      // If the user signed up from the employer signup page, update the role.
-      if (roleParam === "employer" || roleParam === "candidate") {
+      // The trigger that creates `profiles` defaults role to 'candidate' when
+      // raw_user_meta_data.role is missing — which is always the case for
+      // OAuth signups (we can't pass user metadata through signInWithOAuth).
+      // For email/password signups we DO set role in raw_user_meta_data, so
+      // those are always trustworthy.
+      const metadataRole = data.user.user_metadata?.role as
+        | "candidate"
+        | "employer"
+        | undefined;
+      const intendedRole =
+        metadataRole ??
+        (roleParam === "employer" || roleParam === "candidate"
+          ? roleParam
+          : undefined);
+
+      if (intendedRole) {
         await supabase
           .from("profiles")
-          .update({ role: roleParam })
+          .update({ role: intendedRole })
           .eq("id", data.user.id);
       }
 
@@ -51,16 +64,26 @@ export async function GET(request: Request) {
         .eq("id", data.user.id)
         .single();
 
-      // If no profile exists yet (trigger may be delayed), redirect to onboarding
+      // If no profile exists yet (trigger may be delayed), redirect to onboarding.
       if (!profile) {
-        const fallbackRole = roleParam || "candidate";
-        return NextResponse.redirect(
-          `${origin}/onboarding/${fallbackRole}`
-        );
+        if (intendedRole) {
+          return NextResponse.redirect(`${origin}/onboarding/${intendedRole}`);
+        }
+        return NextResponse.redirect(`${origin}/onboarding/role-select`);
       }
 
       if (profile.eligibility === "ineligible") {
         return NextResponse.redirect(`${origin}/blocked`);
+      }
+
+      // OAuth signup with no reliable role signal AND onboarding not done →
+      // ask the user to pick. This handles the cross-domain case where the
+      // pending_oauth_role cookie was lost during Supabase's Site URL fallback.
+      if (
+        !intendedRole &&
+        profile.onboarding_status !== "completed"
+      ) {
+        return NextResponse.redirect(`${origin}/onboarding/role-select`);
       }
 
       if (
