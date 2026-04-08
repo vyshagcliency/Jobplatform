@@ -375,7 +375,11 @@ export default function CandidateOnboardingPage() {
 
     setUploading(false);
     setState("done");
-    setTimeout(() => router.push("/jobs"), 1500);
+    // Hard navigation (not router.push) to avoid the race with middleware/RSC
+    // payload fetch — see commit a81f0e9 for the employer-side fix.
+    setTimeout(() => {
+      window.location.href = "/jobs";
+    }, 1500);
   }
 
   // --- Loading gate (prevents flash while checking auth/onboarding status) ---
@@ -516,7 +520,9 @@ export default function CandidateOnboardingPage() {
               Your profile is complete. Let&apos;s find your perfect match.
             </p>
             <button
-              onClick={() => router.push("/jobs")}
+              onClick={() => {
+                window.location.href = "/jobs";
+              }}
               className="w-full rounded-xl bg-[#BBFF3B] py-3.5 font-semibold text-gray-900 transition hover:bg-[#a8e635]"
             >
               Browse Jobs
