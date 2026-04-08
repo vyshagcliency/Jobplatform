@@ -155,14 +155,14 @@
 | Column | Type | Constraints | Default |
 |--------|------|-------------|---------|
 | `id` | UUID | PK | `gen_random_uuid()` |
-| `company_id` | UUID | NOT NULL, FK → companies(id) ON DELETE CASCADE | — |
-| `employer_id` | UUID | NOT NULL, FK → profiles(id) ON DELETE CASCADE | — |
+| `company_id` | UUID | FK → companies(id) ON DELETE CASCADE (nullable for external, see 00008) | — |
+| `employer_id` | UUID | FK → profiles(id) ON DELETE CASCADE (nullable for external, see 00008) | — |
 | `title` | TEXT | NOT NULL | — |
-| `description` | TEXT | NOT NULL | — |
-| `role_type` | TEXT | NOT NULL, CHECK ('internship' \| 'full_time' \| 'freelance') | — |
-| `compensation` | INTEGER | NOT NULL, CHECK (> 0) | — |
+| `description` | TEXT | nullable for external jobs (see 00008) | — |
+| `role_type` | TEXT | CHECK ('internship' \| 'full_time' \| 'freelance'), nullable (00007) | — |
+| `compensation` | INTEGER | CHECK (> 0), nullable (00007) | — |
 | `location` | TEXT | — | — |
-| `work_style` | TEXT | NOT NULL, CHECK ('remote' \| 'in_office' \| 'hybrid') | — |
+| `work_style` | TEXT | CHECK ('remote' \| 'in_office' \| 'hybrid'), nullable (00007) | — |
 | `skill_tags` | TEXT[] | — | — |
 | `deadline` | DATE | — | — |
 | `status` | TEXT | NOT NULL, CHECK ('active' \| 'filled' \| 'expired') | `'active'` |
@@ -173,11 +173,20 @@
 | `created_at` | TIMESTAMPTZ | NOT NULL | `NOW()` |
 | `updated_at` | TIMESTAMPTZ | NOT NULL | `NOW()` |
 
+**Check constraint `jobs_native_requires_core_fields` (00008):**
+```sql
+external_url IS NOT NULL
+OR (company_id IS NOT NULL AND employer_id IS NOT NULL AND description IS NOT NULL)
+```
+Native jobs still require company, employer, and description. External jobs (jobs scraped from LinkedIn/Indeed/etc.) may skip these.
+
+**Unique partial index `jobs_external_url_unique` (00008):** prevents duplicate external job imports on re-runs. Only applies where `external_url IS NOT NULL`.
+
 **RLS Policies:**
-- ALL: `auth.uid() = employer_id` (employers manage own)
+- ALL: `auth.uid() = employer_id` (employers manage own) — external jobs have NULL employer_id so no one can manage them via RLS; they can only be inserted/updated using the service role (e.g. via `scripts/import-external-jobs.mjs`).
 - SELECT: `auth.role() = 'authenticated' AND status = 'active'` (only active jobs visible)
 
-**Note:** External jobs have `external_url` set. Native platform jobs have it as `null`.
+**Note:** External jobs have `external_url` set. Native platform jobs have it as `null`. The candidate UI redirects to `external_url` instead of showing the Quick Apply flow for external jobs.
 
 ---
 
